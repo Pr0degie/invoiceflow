@@ -77,6 +77,8 @@ function mapStatus(status: Stripe.Subscription.Status) {
     trialing: "TRIALING",
     unpaid: "PAST_DUE",
     incomplete: "INACTIVE",
+    incomplete_expired:"CANCELED",
+    paused:"INACTIVE"
   };
   return map[status] ?? "INACTIVE";
 }
