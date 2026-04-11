@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validations";
 import type { User as PrismaUser } from "@prisma/client";
+import GitHub from "next-auth/providers/github";
 
 type ExtendedUser = PrismaUser & { role: string };
 
@@ -33,6 +34,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   providers: [
+    GitHub({
+    clientId: process.env.GITHUB_CLIENT_ID!,
+    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
     Credentials({
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials);
