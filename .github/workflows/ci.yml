@@ -32,3 +32,6 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           NEXTAUTH_URL: http://localhost:3000
+          STRIPE_SECRET_KEY: sk_test_placeholder
+          STRIPE_PRO_PRICE_ID: price_placeholder
+          STRIPE_WEBHOOK_SECRET: whsec_placeholder
