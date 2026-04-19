@@ -126,7 +126,7 @@ export function Hero() {
             <span className="text-foreground">npx create-next-app</span>
             <span className="text-muted-foreground">-e</span>
             <span className="text-emerald-500 dark:text-emerald-400 break-all">
-              github.com/your-org/saas-starter
+              github.com/Pr0degie/saas-starter
             </span>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

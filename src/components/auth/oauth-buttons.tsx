@@ -17,6 +17,7 @@ export function OAuthButtons() {
     <Button
       variant="outline"
       className="w-full h-10 gap-2.5"
+      type="button"
       onClick={handleGitHub}
       disabled={loading}
     >
