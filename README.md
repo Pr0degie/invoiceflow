@@ -42,11 +42,11 @@ Fill in the values in `.env`:
 | `DATABASE_URL` | PostgreSQL connection string |
 | `NEXTAUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
 | `NEXTAUTH_URL` | App URL (e.g. `http://localhost:3000`) |
-| `GITHUB_ID` | GitHub OAuth App client ID |
-| `GITHUB_SECRET` | GitHub OAuth App client secret |
+| `GITHUB_CLIENT_ID` | GitHub OAuth App client ID |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App client secret |
 | `STRIPE_SECRET_KEY` | Stripe secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `NEXT_PUBLIC_STRIPE_PRO_PRICE_ID` | Stripe price ID for the Pro plan |
+| `STRIPE_PRO_PRICE_ID` | Stripe price ID for the Pro plan |
 
 ### 3. Set up the database
 
@@ -66,7 +66,7 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Stripe Webhooks (local)
 
 ```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
+stripe listen --forward-to localhost:3000/api/stripe/checkout/webhook
 ```
 
 ## Deployment
