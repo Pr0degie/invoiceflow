@@ -23,7 +23,7 @@ export function Header() {
       <div className="container mx-auto max-w-6xl px-4">
         <div className="flex h-14 items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1.5 shrink-0">
+          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-1.5 shrink-0">
             <span className="font-bold text-sm tracking-tight">SaaS</span>
             <span className="size-1.5 rounded-full bg-primary" />
             <span className="font-bold text-sm tracking-tight">Starter</span>
