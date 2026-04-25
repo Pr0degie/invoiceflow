@@ -8,8 +8,27 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "saas-starter", template: "%s | saas-starter" },
-  description: "A production-ready SaaS starter template.",
+  title: {
+    default: "InvoiceFlow — Invoicing that gets out of your way.",
+    template: "%s | InvoiceFlow",
+  },
+  description:
+    "GoBD-compliant invoice management for DACH freelancers and small businesses. Create, send, and track invoices in under 60 seconds. PDF export included.",
+  openGraph: {
+    title: "InvoiceFlow — Invoicing that gets out of your way.",
+    description:
+      "GoBD-compliant invoice management for DACH freelancers and small businesses. Create, send, and track invoices in under 60 seconds.",
+    url: "https://invoiceflow.dev",
+    siteName: "InvoiceFlow",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "InvoiceFlow — Invoicing that gets out of your way.",
+    description:
+      "GoBD-compliant invoice management for DACH freelancers and small businesses.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

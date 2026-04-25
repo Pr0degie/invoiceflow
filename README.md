@@ -1,78 +1,163 @@
-# SaaS Starter
+<div align="center">
 
-A production-ready Next.js SaaS starter with authentication, Stripe billing, role-based access, and an admin dashboard.
+# InvoiceFlow
 
-## Stack
+**Invoicing that gets out of your way.**
 
-- **Framework** — Next.js 15 (App Router)
-- **Auth** — NextAuth.js (Credentials + GitHub OAuth)
-- **Database** — PostgreSQL via Prisma
-- **Payments** — Stripe (Checkout + Webhooks)
-- **Styling** — Tailwind CSS
-- **Validation** — Zod
+Full-stack invoice management for freelancers and small teams.
+GoBD-compliant invoices, PDF export, status tracking — built as a portfolio project.
 
-## Features
+[![Status](https://img.shields.io/badge/status-in%20development-orange)]()
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-- Email/password and GitHub OAuth login
-- Stripe subscription billing with webhook handling
-- Admin and user roles with protected routes
-- Account settings (name, email, password)
-- Admin user management dashboard
+[🇩🇪 Deutsche Version](README.de.md)
 
-## Getting Started
+</div>
 
-### 1. Clone and install
+---
 
-```bash
-git clone https://github.com/your-username/saas-starter.git
-cd saas-starter
-npm install
+## What this is
+
+InvoiceFlow is a real product, built end-to-end, designed to demonstrate the kind
+of work clients can expect — separate backend and frontend repositories, real auth,
+real domain logic, real deployment, no shortcuts.
+
+> **Live demo:** _coming soon_ — currently in active development
+
+## Architecture
+
+```
+┌─────────────────────────┐         ┌──────────────────────────┐
+│  Frontend (this repo)   │         │  invoice-api             │
+│                         │         │  (separate repository)   │
+│  • Next.js 15           │ ◄─────► │                          │
+│  • NextAuth.js v5       │  HTTPS  │  • ASP.NET Core 8        │
+│  • TanStack Query       │  + JWT  │  • PostgreSQL + EF Core  │
+│  • Typed API client     │         │  • QuestPDF              │
+│  • i18n (EN + DE)       │         │  • JWT auth              │
+│                         │         │                          │
+│  → Vercel               │         │  → Railway               │
+└─────────────────────────┘         └──────────────────────────┘
 ```
 
-### 2. Configure environment
+Frontend and backend are independent services, communicating via a typed REST API.
+TypeScript types are auto-generated from the backend's OpenAPI spec — no manual
+schema synchronization.
+
+**Backend repository:** [Pr0degie/invoice-api](https://github.com/Pr0degie/invoice-api)
+
+## Status
+
+| Area | Status |
+|------|--------|
+| Marketing landing page | ✅ Done |
+| Sign-up / Sign-in | ✅ Done |
+| API client (typed, with refresh flow) | 🚧 In progress |
+| App shell (sidebar + topbar) | ⏳ Planned |
+| Dashboard (KPIs, revenue chart) | ⏳ Planned |
+| Invoice list (filters, PDF download) | ⏳ Planned |
+| Invoice detail + status flow | ⏳ Planned |
+| Invoice create/edit form | ⏳ Planned |
+| Settings | ⏳ Planned |
+| Production deployment | ⏳ Planned |
+
+## Tech Stack
+
+**Framework & language:** Next.js 15 (App Router), TypeScript 5
+**Styling:** Tailwind CSS 4, shadcn/ui, lucide-react
+**State:** TanStack Query for server state, React Hook Form + Zod for forms
+**Auth:** NextAuth.js v5 (credentials provider against the invoice-api JWT endpoint)
+**i18n:** next-intl, English default with German support
+**Charts:** Recharts
+**Toasts:** Sonner
+**Tooling:** pnpm, ESLint, Playwright (visual feedback during development)
+
+## Design philosophy
+
+This is a **finance UI**, not a generic SaaS dashboard. That means:
+
+- Numbers are right-aligned, `tabular-nums`, locale-aware (`€1,234.56` / `1.234,56 €`)
+- Status colors used sparingly and consistently across all views
+- One restrained accent (teal) — no rainbow gradients
+- Typography over icons — finance tools read better when uncluttered
+- Empty, loading, and error states are first-class, not afterthoughts
+
+## Local development
 
 ```bash
-cp .env.example .env
+git clone https://github.com/Pr0degie/invoiceflow-frontend
+cd invoiceflow-frontend
+pnpm install
+cp .env.example .env.local
+# edit .env.local — point NEXT_PUBLIC_API_BASE_URL at your invoice-api instance
+pnpm dev
 ```
 
-Fill in the values in `.env`:
+Frontend runs at `http://localhost:3000`. Requires a running [invoice-api](https://github.com/Pr0degie/invoice-api)
+backend (typically `http://localhost:8080` via `docker compose up`).
 
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `NEXTAUTH_SECRET` | Random secret (`openssl rand -base64 32`) |
-| `NEXTAUTH_URL` | App URL (e.g. `http://localhost:3000`) |
-| `GITHUB_CLIENT_ID` | GitHub OAuth App client ID |
-| `GITHUB_CLIENT_SECRET` | GitHub OAuth App client secret |
-| `STRIPE_SECRET_KEY` | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `STRIPE_PRO_PRICE_ID` | Stripe price ID for the Pro plan |
+### Scripts
 
-### 3. Set up the database
+| Command | What it does |
+|---------|--------------|
+| `pnpm dev` | Local dev server with hot reload |
+| `pnpm build` | Production build |
+| `pnpm lint` | ESLint check |
+| `pnpm typecheck` | TypeScript check |
+| `pnpm api:types` | Regenerate TS types from `openapi.json` |
 
-```bash
-npx prisma migrate dev
-npx prisma db seed
+## What this project deliberately does NOT have
+
+A truthful product, not a feature list cosplay. The following are explicitly
+out of scope:
+
+- No customer/CRM entity — recipients are free text per invoice
+- No payment history tracking — only invoice status transitions
+- No dunning / reminder workflow
+- No recurring invoices
+- No multi-currency conversion
+- No team or workspace features
+- No file attachments
+
+If a real product needs these later, they get added as proper features — not
+faked in the UI.
+
+## Repository structure
+
+```
+invoiceflow-frontend/
+├── src/
+│   ├── app/              # Next.js App Router routes
+│   │   ├── [locale]/     # i18n route group
+│   │   └── api/          # NextAuth handlers
+│   ├── components/       # UI components
+│   ├── lib/
+│   │   ├── api/          # Typed API client + hooks
+│   │   ├── i18n/         # Formatters
+│   │   └── schemas/      # Zod schemas
+│   └── messages/         # i18n translations
+├── _prompts/             # Build prompts driving development
+├── refs/                 # UI reference screenshots (gitignored)
+├── CLAUDE.md             # Design brief + API contract
+└── openapi.json          # API spec (source for type generation)
 ```
 
-### 4. Run locally
+## Built with intention
 
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Stripe Webhooks (local)
-
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/checkout/webhook
-```
-
-## Deployment
-
-Deploy to Vercel with one click or any Node.js-compatible host. Make sure to add all environment variables and set up the Stripe webhook endpoint pointing to `/api/stripe/webhook`.
+The codebase is built using a structured prompt-driven workflow with Claude Code,
+where each major area (auth, dashboard, invoice flow) has a corresponding spec
+in `_prompts/`. Specs are versioned alongside the code — useful both as a
+working document during development and as a record of decisions for anyone
+reading the repo afterward.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+
+## Author
+
+Built by [@Pr0degie](https://github.com/Pr0degie). Open to feedback, issues,
+and constructive criticism.

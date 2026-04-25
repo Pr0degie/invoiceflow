@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/brand/logo";
 
 interface Props {
   children: React.ReactNode;
@@ -44,13 +45,8 @@ export function AuthLayout({ children, heading, subheading }: Props) {
 
       {/* Back to home — top left */}
       <div className="absolute top-4 left-4">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <span className="font-bold">SaaS</span>
-          <span className="size-1.5 rounded-full bg-primary inline-block" />
-          <span className="font-bold">Starter</span>
+        <Link href="/">
+          <Logo size="default" />
         </Link>
       </div>
 

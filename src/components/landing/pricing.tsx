@@ -8,50 +8,55 @@ import { AnimatedSection } from "@/components/landing/animated-section";
 const plans = [
   {
     name: "Free",
-    price: "$0",
-    period: "/mo",
-    description: "For side projects and experiments.",
+    price: "0 €",
+    period: "/month",
+    description: "To get started",
     features: [
-      "1 project",
+      "5 invoices per month",
+      "PDF export",
+      "Status tracking",
       "Community support",
-      "Basic analytics",
     ],
-    cta: "Get Started",
+    cta: "Get started",
     href: "/auth/register",
     popular: false,
     variant: "outline" as const,
+    external: false,
   },
   {
     name: "Pro",
-    price: "$12",
-    period: "/mo",
-    description: "For professionals who need more.",
+    price: "12 €",
+    period: "/month",
+    description: "For active freelancers",
     features: [
-      "Unlimited projects",
+      "Unlimited invoices",
+      "PDF export",
+      "Status tracking",
+      "Custom sender profiles",
       "Priority support",
-      "Advanced analytics",
-      "Custom domain",
     ],
-    cta: "Start Free Trial",
+    cta: "Start free trial",
     href: "/auth/register",
     popular: true,
     variant: "default" as const,
+    external: false,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
+    name: "Self-Hosted",
+    price: "Free",
     period: null,
-    description: "For teams with specific needs.",
+    description: "For the tech-savvy",
     features: [
-      "Everything in Pro",
-      "SSO",
-      "SLA",
-      "Dedicated support",
+      "Open source on GitHub",
+      "Full data sovereignty",
+      "Unlimited everything",
+      "Community support",
     ],
-    cta: "Contact Us",
-    href: "mailto:hello@example.com",
+    cta: "View on GitHub",
+    href: "https://github.com/Pr0degie/invoiceflow",
     popular: false,
     variant: "outline" as const,
+    external: true,
   },
 ];
 
@@ -68,7 +73,8 @@ export function Pricing() {
             Simple, transparent pricing
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Start free and scale as you grow. No hidden fees, no surprises.
+            Start for free. Host it yourself if you prefer full control.
+            No hidden fees, no surprises.
           </p>
         </AnimatedSection>
 
@@ -84,7 +90,7 @@ export function Pricing() {
                   : "border border-border/60 bg-card"
               )}
             >
-              {/* Most Popular badge — overlaps top border */}
+              {/* Most Popular badge */}
               {plan.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <Badge className="px-3 py-0.5 text-xs shadow-sm">
@@ -99,8 +105,6 @@ export function Pricing() {
                 <p className="text-sm text-muted-foreground mb-5">
                   {plan.description}
                 </p>
-
-                {/* Price */}
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-bold tracking-tight">
                     {plan.price}
@@ -113,7 +117,7 @@ export function Pricing() {
                 </div>
               </div>
 
-              {/* Feature list — flex-1 pushes button to bottom */}
+              {/* Feature list */}
               <ul className="flex-1 space-y-3 mb-8">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-2.5">
@@ -124,12 +128,12 @@ export function Pricing() {
               </ul>
 
               {/* CTA */}
-              <Link href={plan.href} className="w-full">
-                <Button
-                  variant={plan.variant}
-                  className="w-full"
-                  size="lg"
-                >
+              <Link
+                href={plan.href}
+                className="w-full"
+                {...(plan.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                <Button variant={plan.variant} className="w-full" size="lg">
                   {plan.cta}
                 </Button>
               </Link>

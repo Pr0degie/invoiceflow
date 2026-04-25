@@ -26,7 +26,7 @@ export function Sidebar({ userName, userEmail, isAdmin }: SidebarProps) {
   return (
     <aside className="w-60 min-h-screen bg-gray-950 flex flex-col">
       <div className="h-16 flex items-center px-6 border-b border-white/5">
-        <span className="text-white font-semibold tracking-tight">saas-starter</span>
+        <span className="text-white font-semibold tracking-tight">InvoiceFlow</span>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5">
