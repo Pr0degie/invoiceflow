@@ -34,7 +34,7 @@ POST /api/auth/register  { name, email, password } → AuthResponse
 POST /api/auth/login     { email, password }        → AuthResponse
 POST /api/auth/refresh   { refreshToken }           → AuthResponse
 GET  /api/auth/me                                   → UserDto
-POST /api/auth/logout                               → 204
+POST /api/auth/logout    { refreshToken }           → 204
 ```
 
 `AuthResponse`: `{ token, refreshToken, expiresAt, user: UserDto }`
