@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
 import { registerSchema } from "@/lib/validations";
+import { apiClient } from "@/lib/api/client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,19 +16,23 @@ export async function POST(req: NextRequest) {
 
     const { name, email, password } = parsed.data;
 
-    const existing = await db.user.findUnique({ where: { email } });
-    if (existing) {
+    const { error, response } = await apiClient.POST("/api/auth/register", {
+      body: { name, email, password },
+    });
+
+    if (error) {
+      const status = response.status;
+      if (status === 409) {
+        return NextResponse.json(
+          { error: "An account with this email already exists" },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
-        { error: "An account with this email already exists" },
-        { status: 409 }
+        { error: "Registration failed. Please try again." },
+        { status: status >= 400 ? status : 500 }
       );
     }
-
-    const hashed = await bcrypt.hash(password, 12); // cost factor 12 — ~250ms, good balance of security and latency
-
-    await db.user.create({
-      data: { name, email, password: hashed },
-    });
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch {

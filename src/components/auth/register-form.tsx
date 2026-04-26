@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,28 +11,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
-
-const schema = z
-  .object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().email("Enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[a-zA-Z]/, "Password must contain at least one letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmPassword: z.string(),
-    terms: z.boolean().refine((v) => v === true, "You must accept the terms"),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type FormErrors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 
 export function RegisterForm() {
+  const t = useTranslations("auth.signUp");
+  const tErr = useTranslations("auth.errors");
+
+  const schema = z
+    .object({
+      name: z.string().min(1, tErr("nameRequired")),
+      email: z.string().email(tErr("invalidEmail")),
+      password: z
+        .string()
+        .min(8, tErr("passwordMinLength"))
+        .regex(/[a-zA-Z]/, tErr("passwordNeedsLetter"))
+        .regex(/[0-9]/, tErr("passwordNeedsNumber")),
+      confirmPassword: z.string(),
+      terms: z
+        .boolean()
+        .refine((v) => v === true, tErr("termsRequired")),
+    })
+    .refine((d) => d.password === d.confirmPassword, {
+      message: tErr("passwordsMustMatch"),
+      path: ["confirmPassword"],
+    });
+
+  type FormErrors = Partial<Record<keyof z.infer<typeof schema>, string>>;
+
   const router = useRouter();
   const [form, setForm] = useState({
     name: "",
@@ -46,7 +51,10 @@ export function RegisterForm() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function setField<K extends keyof typeof form>(key: K, value: typeof form[K]) {
+  function setField<K extends keyof typeof form>(
+    key: K,
+    value: (typeof form)[K]
+  ) {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
   }
@@ -81,7 +89,7 @@ export function RegisterForm() {
     setLoading(false);
 
     if (!res.ok) {
-      setServerError(data.error ?? "Something went wrong. Please try again.");
+      setServerError(data.error ?? tErr("generic"));
       return;
     }
 
@@ -96,24 +104,14 @@ export function RegisterForm() {
         </Alert>
       )}
 
-      {/* GitHub OAuth — prominent first */}
-      <OAuthButtons />
-
-      {/* Separator */}
-      <div className="flex items-center gap-3 my-5">
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-xs text-muted-foreground">or continue with email</span>
-        <div className="h-px flex-1 bg-border" />
-      </div>
-
       {/* Fields */}
       <div className="space-y-4">
         {/* Name */}
         <div className="space-y-1.5">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">{t("nameLabel")}</Label>
           <Input
             id="name"
-            placeholder="Your name"
+            placeholder={t("namePlaceholder")}
             value={form.name}
             onChange={(e) => setField("name", e.target.value)}
             autoComplete="name"
@@ -128,7 +126,7 @@ export function RegisterForm() {
 
         {/* Email */}
         <div className="space-y-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t("emailLabel")}</Label>
           <Input
             id="email"
             type="email"
@@ -147,12 +145,12 @@ export function RegisterForm() {
 
         {/* Password */}
         <div className="space-y-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t("passwordLabel")}</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 characters"
+              placeholder={t("passwordPlaceholder")}
               value={form.password}
               onChange={(e) => setField("password", e.target.value)}
               autoComplete="new-password"
@@ -164,7 +162,7 @@ export function RegisterForm() {
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? t("hidePassword") : t("showPassword")}
             >
               {showPassword ? (
                 <EyeOff className="size-4" />
@@ -180,12 +178,12 @@ export function RegisterForm() {
 
         {/* Confirm Password */}
         <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
+          <Label htmlFor="confirmPassword">{t("confirmPasswordLabel")}</Label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirm ? "text" : "password"}
-              placeholder="Repeat password"
+              placeholder={t("confirmPasswordPlaceholder")}
               value={form.confirmPassword}
               onChange={(e) => setField("confirmPassword", e.target.value)}
               autoComplete="new-password"
@@ -197,7 +195,7 @@ export function RegisterForm() {
               type="button"
               onClick={() => setShowConfirm((v) => !v)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={showConfirm ? "Hide password" : "Show password"}
+              aria-label={showConfirm ? t("hidePassword") : t("showPassword")}
             >
               {showConfirm ? (
                 <EyeOff className="size-4" />
@@ -221,14 +219,23 @@ export function RegisterForm() {
               disabled={loading}
               className="mt-0.5"
             />
-            <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug cursor-pointer">
-              I agree to the{" "}
-              <Link href="#" className="text-foreground underline underline-offset-2 hover:text-primary transition-colors">
-                Terms of Service
+            <label
+              htmlFor="terms"
+              className="text-sm text-muted-foreground leading-snug cursor-pointer"
+            >
+              {t("termsText")}{" "}
+              <Link
+                href="#"
+                className="text-foreground underline underline-offset-2 hover:text-primary transition-colors"
+              >
+                {t("termsLink")}
               </Link>{" "}
-              and{" "}
-              <Link href="#" className="text-foreground underline underline-offset-2 hover:text-primary transition-colors">
-                Privacy Policy
+              {t("andText")}{" "}
+              <Link
+                href="#"
+                className="text-foreground underline underline-offset-2 hover:text-primary transition-colors"
+              >
+                {t("privacyLink")}
               </Link>
             </label>
           </div>
@@ -245,17 +252,17 @@ export function RegisterForm() {
         disabled={loading}
       >
         {loading && <Loader2 className="size-4 animate-spin" />}
-        {loading ? "Creating account…" : "Create account"}
+        {loading ? t("submitting") : t("submitButton")}
       </Button>
 
       {/* Footer */}
       <p className="text-center text-sm text-muted-foreground mt-5">
-        Already have an account?{" "}
+        {t("hasAccount")}{" "}
         <Link
           href="/auth/login"
           className="text-foreground font-medium hover:text-primary transition-colors underline underline-offset-2"
         >
-          Sign in
+          {t("signInLink")}
         </Link>
       </p>
     </form>

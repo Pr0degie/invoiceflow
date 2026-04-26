@@ -1,0 +1,201 @@
+{
+  "common": {
+    "brand": {
+      "name": "InvoiceFlow",
+      "tagline": "Rechnungen, die sich schreiben lassen."
+    },
+    "actions": {
+      "signIn": "Anmelden",
+      "signUp": "Registrieren",
+      "getStarted": "Jetzt starten",
+      "getStartedFree": "Kostenlos starten",
+      "startFreeTrial": "Kostenlos testen",
+      "viewOnGitHub": "Auf GitHub ansehen"
+    },
+    "nav": {
+      "features": "Funktionen",
+      "pricing": "Preise",
+      "docs": "Dokumentation"
+    }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "Für Freelancer und kleine Teams",
+      "headline": "Rechnungen,",
+      "headlineAccent": "die sich schreiben lassen.",
+      "sub": "GoBD-konforme Rechnungen in unter 60 Sekunden. Versenden, verfolgen und als PDF exportieren — alles an einem Ort.",
+      "trustLine": "Open Source · GoBD-konform · Hosting in der EU",
+      "seeHowItWorks": "So funktioniert's",
+      "dashboard": {
+        "title": "InvoiceFlow — Dashboard",
+        "outstanding": "Ausstehend",
+        "paidThisMonth": "Bezahlt diesen Monat",
+        "overdue": "Überfällig",
+        "status": {
+          "sent": "Versendet",
+          "paid": "Bezahlt",
+          "overdue": "Überfällig",
+          "draft": "Entwurf"
+        }
+      }
+    },
+    "features": {
+      "eyebrow": "Was enthalten ist",
+      "title": "Alles, was Freelancer wirklich brauchen",
+      "sub": "Kein Ballast. Nur die Werkzeuge, die Ihnen bei jeder Rechnung Zeit sparen.",
+      "items": {
+        "fast": {
+          "title": "Rechnungen in Sekunden",
+          "desc": "Vom Empfänger bis zur versandfertigen PDF — der schnellste Weg zur Rechnung. Kein Setup, keine Vorlagen."
+        },
+        "gobd": {
+          "title": "GoBD-konform",
+          "desc": "Unveränderliche Rechnungsnummern, revisionssichere Ablage und DSGVO-konforme Infrastruktur in der EU."
+        },
+        "realtime": {
+          "title": "Echtzeit-Überblick",
+          "desc": "Offene Beträge, überfällige Rechnungen und monatliche Einnahmen — auf einen Blick im Dashboard."
+        },
+        "pdf": {
+          "title": "PDF-Export",
+          "desc": "Professionell formatierte PDFs, versandbereit. Kein Designaufwand, keine externen Tools, keine Zusatzkosten."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Preise",
+      "title": "Einfache, transparente Preise",
+      "sub": "Kostenlos starten. Selbst hosten, wenn Sie volle Kontrolle bevorzugen. Keine versteckten Kosten.",
+      "mostPopular": "Beliebteste Wahl",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "description": "Zum Einstieg",
+          "price": "0 €",
+          "period": "/Monat",
+          "cta": "Jetzt starten",
+          "features": [
+            "5 Rechnungen pro Monat",
+            "PDF-Export",
+            "Statusverfolgung",
+            "Community-Support"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "description": "Für aktive Freelancer",
+          "price": "12 €",
+          "period": "/Monat",
+          "cta": "Kostenlos testen",
+          "features": [
+            "Unbegrenzte Rechnungen",
+            "PDF-Export",
+            "Statusverfolgung",
+            "Individuelle Absenderprofile",
+            "Prioritäts-Support"
+          ]
+        },
+        "selfHosted": {
+          "name": "Self-Hosted",
+          "description": "Für Technik-Affine",
+          "price": "Kostenlos",
+          "cta": "Auf GitHub ansehen",
+          "features": [
+            "Open Source auf GitHub",
+            "Vollständige Datensouveränität",
+            "Alles unbegrenzt",
+            "Community-Support"
+          ]
+        }
+      }
+    },
+    "cta": {
+      "title": "Starten Sie mit Ihrer ersten Rechnung.",
+      "sub": "Konto in Sekunden erstellt. Ihre erste Rechnung ist fertig, bevor der Kaffee kalt wird."
+    },
+    "footer": {
+      "brand": {
+        "tagline": "Rechnungen, die sich schreiben lassen. Für DACH-Freelancer und kleine Unternehmen, die sich auf ihre Arbeit konzentrieren wollen."
+      },
+      "nav": {
+        "product": "Produkt",
+        "resources": "Ressourcen",
+        "legal": "Rechtliches",
+        "links": {
+          "features": "Funktionen",
+          "pricing": "Preise",
+          "changelog": "Changelog",
+          "roadmap": "Roadmap",
+          "docs": "Dokumentation",
+          "api": "API",
+          "frontendGitHub": "Frontend (GitHub)",
+          "backendGitHub": "Backend (GitHub)",
+          "imprint": "Impressum",
+          "privacy": "Datenschutz",
+          "terms": "AGB"
+        }
+      },
+      "copyright": "© {year} InvoiceFlow. Alle Rechte vorbehalten.",
+      "builtWith": "Entwickelt mit"
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Willkommen zurück",
+      "subtitle": "In Ihrem Konto anmelden",
+      "emailLabel": "E-Mail",
+      "passwordLabel": "Passwort",
+      "forgotPassword": "Passwort vergessen?",
+      "orContinueWith": "oder mit E-Mail fortfahren",
+      "submitButton": "Anmelden",
+      "submitting": "Wird angemeldet…",
+      "noAccount": "Noch kein Konto?",
+      "signUpLink": "Registrieren",
+      "accountCreated": "Konto erstellt! Bitte melden Sie sich an."
+    },
+    "signUp": {
+      "title": "Konto erstellen",
+      "subtitle": "Kostenlos starten, jederzeit upgraden",
+      "nameLabel": "Name",
+      "namePlaceholder": "Ihr Name",
+      "emailLabel": "E-Mail",
+      "passwordLabel": "Passwort",
+      "passwordPlaceholder": "Min. 8 Zeichen",
+      "confirmPasswordLabel": "Passwort bestätigen",
+      "confirmPasswordPlaceholder": "Passwort wiederholen",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen",
+      "termsText": "Ich akzeptiere die",
+      "termsLink": "Nutzungsbedingungen",
+      "andText": "und die",
+      "privacyLink": "Datenschutzerklärung",
+      "submitButton": "Konto erstellen",
+      "submitting": "Wird erstellt…",
+      "hasAccount": "Bereits ein Konto?",
+      "signInLink": "Anmelden",
+      "orContinueWith": "oder mit E-Mail fortfahren"
+    },
+    "errors": {
+      "invalidEmail": "Gültige E-Mail-Adresse eingeben",
+      "passwordRequired": "Passwort ist erforderlich",
+      "nameRequired": "Name ist erforderlich",
+      "passwordMinLength": "Passwort muss mindestens 8 Zeichen lang sein",
+      "passwordNeedsLetter": "Passwort muss mindestens einen Buchstaben enthalten",
+      "passwordNeedsNumber": "Passwort muss mindestens eine Zahl enthalten",
+      "passwordsMustMatch": "Passwörter stimmen nicht überein",
+      "termsRequired": "Sie müssen die Bedingungen akzeptieren",
+      "invalidCredentials": "Ungültige E-Mail oder falsches Passwort. Bitte versuchen Sie es erneut.",
+      "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    },
+    "oauth": {
+      "continueWithGitHub": "Mit GitHub fortfahren"
+    }
+  },
+  "language": {
+    "switcher": {
+      "label": "Sprache"
+    },
+    "en": "English",
+    "de": "Deutsch"
+  }
+}

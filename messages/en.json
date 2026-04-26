@@ -1,0 +1,201 @@
+{
+  "common": {
+    "brand": {
+      "name": "InvoiceFlow",
+      "tagline": "Invoicing that gets out of your way."
+    },
+    "actions": {
+      "signIn": "Sign in",
+      "signUp": "Sign up",
+      "getStarted": "Get started",
+      "getStartedFree": "Get started free",
+      "startFreeTrial": "Start free trial",
+      "viewOnGitHub": "View on GitHub"
+    },
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "docs": "Docs"
+    }
+  },
+  "landing": {
+    "hero": {
+      "eyebrow": "For freelancers and small teams",
+      "headline": "Invoicing that",
+      "headlineAccent": "gets out of your way.",
+      "sub": "GoBD-compliant invoices in under 60 seconds. Send, track, and export as PDF — all in one place.",
+      "trustLine": "Open source · GoBD-compliant · Hosted in the EU",
+      "seeHowItWorks": "See how it works",
+      "dashboard": {
+        "title": "InvoiceFlow — Dashboard",
+        "outstanding": "Outstanding",
+        "paidThisMonth": "Paid this month",
+        "overdue": "Overdue",
+        "status": {
+          "sent": "Sent",
+          "paid": "Paid",
+          "overdue": "Overdue",
+          "draft": "Draft"
+        }
+      }
+    },
+    "features": {
+      "eyebrow": "What's included",
+      "title": "Everything a freelancer actually needs",
+      "sub": "No bloat. Just the tools that save you time on every invoice you send.",
+      "items": {
+        "fast": {
+          "title": "Invoices in seconds",
+          "desc": "From recipient to ready-to-send PDF — the fastest way to create an invoice. No setup, no templates to configure."
+        },
+        "gobd": {
+          "title": "GoBD compliant",
+          "desc": "Immutable invoice numbers, audit-proof storage, and GDPR-secure infrastructure hosted in the EU."
+        },
+        "realtime": {
+          "title": "Real-time overview",
+          "desc": "Outstanding amounts, overdue invoices, and monthly revenue — visible at a glance on your dashboard."
+        },
+        "pdf": {
+          "title": "PDF export",
+          "desc": "Professionally formatted PDFs, ready to send. No design work, no external tools, no extra cost."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Pricing",
+      "title": "Simple, transparent pricing",
+      "sub": "Start for free. Host it yourself if you prefer full control. No hidden fees, no surprises.",
+      "mostPopular": "Most Popular",
+      "plans": {
+        "free": {
+          "name": "Free",
+          "description": "To get started",
+          "price": "0 €",
+          "period": "/month",
+          "cta": "Get started",
+          "features": [
+            "5 invoices per month",
+            "PDF export",
+            "Status tracking",
+            "Community support"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "description": "For active freelancers",
+          "price": "12 €",
+          "period": "/month",
+          "cta": "Start free trial",
+          "features": [
+            "Unlimited invoices",
+            "PDF export",
+            "Status tracking",
+            "Custom sender profiles",
+            "Priority support"
+          ]
+        },
+        "selfHosted": {
+          "name": "Self-Hosted",
+          "description": "For the tech-savvy",
+          "price": "Free",
+          "cta": "View on GitHub",
+          "features": [
+            "Open source on GitHub",
+            "Full data sovereignty",
+            "Unlimited everything",
+            "Community support"
+          ]
+        }
+      }
+    },
+    "cta": {
+      "title": "Start with your first invoice.",
+      "sub": "Create an account in seconds. Your first invoice is ready before your next coffee."
+    },
+    "footer": {
+      "brand": {
+        "tagline": "Invoicing that gets out of your way. Built for DACH freelancers and small businesses who want to focus on their work, not the paperwork."
+      },
+      "nav": {
+        "product": "Product",
+        "resources": "Resources",
+        "legal": "Legal",
+        "links": {
+          "features": "Features",
+          "pricing": "Pricing",
+          "changelog": "Changelog",
+          "roadmap": "Roadmap",
+          "docs": "Docs",
+          "api": "API",
+          "frontendGitHub": "Frontend (GitHub)",
+          "backendGitHub": "Backend (GitHub)",
+          "imprint": "Imprint",
+          "privacy": "Privacy",
+          "terms": "Terms"
+        }
+      },
+      "copyright": "© {year} InvoiceFlow. All rights reserved.",
+      "builtWith": "Built with"
+    }
+  },
+  "auth": {
+    "signIn": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "orContinueWith": "or continue with email",
+      "submitButton": "Sign in",
+      "submitting": "Signing in…",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up",
+      "accountCreated": "Account created! Sign in to continue."
+    },
+    "signUp": {
+      "title": "Create an account",
+      "subtitle": "Free to start, upgrade anytime",
+      "nameLabel": "Name",
+      "namePlaceholder": "Your name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Min. 8 characters",
+      "confirmPasswordLabel": "Confirm password",
+      "confirmPasswordPlaceholder": "Repeat password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "termsText": "I agree to the",
+      "termsLink": "Terms of Service",
+      "andText": "and",
+      "privacyLink": "Privacy Policy",
+      "submitButton": "Create account",
+      "submitting": "Creating account…",
+      "hasAccount": "Already have an account?",
+      "signInLink": "Sign in",
+      "orContinueWith": "or continue with email"
+    },
+    "errors": {
+      "invalidEmail": "Enter a valid email address",
+      "passwordRequired": "Password is required",
+      "nameRequired": "Name is required",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordNeedsLetter": "Password must contain at least one letter",
+      "passwordNeedsNumber": "Password must contain at least one number",
+      "passwordsMustMatch": "Passwords do not match",
+      "termsRequired": "You must accept the terms",
+      "invalidCredentials": "Invalid email or password. Please try again.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "oauth": {
+      "continueWithGitHub": "Continue with GitHub"
+    }
+  },
+  "language": {
+    "switcher": {
+      "label": "Language"
+    },
+    "en": "English",
+    "de": "Deutsch"
+  }
+}

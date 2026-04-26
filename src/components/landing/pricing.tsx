@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,76 +6,49 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { AnimatedSection } from "@/components/landing/animated-section";
 
-const plans = [
-  {
-    name: "Free",
-    price: "0 €",
-    period: "/month",
-    description: "To get started",
-    features: [
-      "5 invoices per month",
-      "PDF export",
-      "Status tracking",
-      "Community support",
-    ],
-    cta: "Get started",
-    href: "/auth/register",
-    popular: false,
-    variant: "outline" as const,
-    external: false,
-  },
-  {
-    name: "Pro",
-    price: "12 €",
-    period: "/month",
-    description: "For active freelancers",
-    features: [
-      "Unlimited invoices",
-      "PDF export",
-      "Status tracking",
-      "Custom sender profiles",
-      "Priority support",
-    ],
-    cta: "Start free trial",
-    href: "/auth/register",
-    popular: true,
-    variant: "default" as const,
-    external: false,
-  },
-  {
-    name: "Self-Hosted",
-    price: "Free",
-    period: null,
-    description: "For the tech-savvy",
-    features: [
-      "Open source on GitHub",
-      "Full data sovereignty",
-      "Unlimited everything",
-      "Community support",
-    ],
-    cta: "View on GitHub",
+type PlanKey = "free" | "pro" | "selfHosted";
+
+const planMeta: Record<
+  PlanKey,
+  { href: string; popular: boolean; external: boolean; variant: "outline" | "default" }
+> = {
+  free: { href: "/auth/register", popular: false, external: false, variant: "outline" },
+  pro: { href: "/auth/register", popular: true, external: false, variant: "default" },
+  selfHosted: {
     href: "https://github.com/Pr0degie/invoiceflow",
     popular: false,
-    variant: "outline" as const,
     external: true,
+    variant: "outline",
   },
-];
+};
 
-export function Pricing() {
+export async function Pricing() {
+  const t = await getTranslations("landing.pricing");
+
+  const plans = (Object.keys(planMeta) as PlanKey[]).map((key) => ({
+    key,
+    name: t(`plans.${key}.name`),
+    description: t(`plans.${key}.description`),
+    price: t(`plans.${key}.price`),
+    period: key !== "selfHosted" ? t(`plans.${key}.period`) : null,
+    features: t.raw(`plans.${key}.features`) as string[],
+    cta: t(`plans.${key}.cta`),
+    ...planMeta[key],
+  }));
+
   return (
     <section id="pricing" className="py-20 md:py-28">
       <div className="container mx-auto max-w-6xl px-4">
         {/* Section header */}
         <AnimatedSection className="mb-12 md:mb-16 max-w-2xl">
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-            Pricing
+            {t("eyebrow")}
           </p>
           <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-4">
-            Simple, transparent pricing
+            {t("title")}
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Start for free. Host it yourself if you prefer full control.
-            No hidden fees, no surprises.
+            {t("sub")}
           </p>
         </AnimatedSection>
 
@@ -82,7 +56,7 @@ export function Pricing() {
         <AnimatedSection delay={100} className="grid md:grid-cols-3 gap-6 md:gap-8">
           {plans.map((plan) => (
             <div
-              key={plan.name}
+              key={plan.key}
               className={cn(
                 "relative flex flex-col rounded-xl p-6 md:p-8",
                 plan.popular
@@ -94,7 +68,7 @@ export function Pricing() {
               {plan.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <Badge className="px-3 py-0.5 text-xs shadow-sm">
-                    Most Popular
+                    {t("mostPopular")}
                   </Badge>
                 </div>
               )}
@@ -131,7 +105,9 @@ export function Pricing() {
               <Link
                 href={plan.href}
                 className="w-full"
-                {...(plan.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                {...(plan.external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
               >
                 <Button variant={plan.variant} className="w-full" size="lg">
                   {plan.cta}

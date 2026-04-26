@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-// Admin lives outside /dashboard, so it doesn't inherit the dashboard layout and renders its own Sidebar.
 import { Sidebar } from "@/components/layout/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,11 +17,7 @@ export default async function AdminPage() {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar
-        isAdmin
-        userName={session.user.name}
-        userEmail={session.user.email}
-      />
+      <Sidebar isAdmin userName={session.user.name} userEmail={session.user.email} />
       <main className="flex-1 overflow-auto">
         <div className="max-w-4xl mx-auto px-8 py-10">
           <div className="mb-8">
@@ -38,10 +33,18 @@ export default async function AdminPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">User</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">Role</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">Plan</th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">Joined</th>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">
+                      User
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">
+                      Role
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">
+                      Plan
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">
+                      Joined
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -49,7 +52,9 @@ export default async function AdminPage() {
                     <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{user.name ?? "—"}</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {user.name ?? "—"}
+                          </p>
                           <p className="text-xs text-gray-500">{user.email}</p>
                         </div>
                       </td>
@@ -61,9 +66,11 @@ export default async function AdminPage() {
                       <td className="px-6 py-4">
                         <Badge
                           variant={
-                            user.subscription?.status === "ACTIVE" ? "success"
-                            : user.subscription?.status === "PAST_DUE" ? "warning"
-                            : "default"
+                            user.subscription?.status === "ACTIVE"
+                              ? "success"
+                              : user.subscription?.status === "PAST_DUE"
+                              ? "warning"
+                              : "default"
                           }
                         >
                           {user.subscription?.status ?? "Free"}

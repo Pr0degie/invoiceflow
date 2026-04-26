@@ -1,35 +1,8 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Mail } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-
-const nav = [
-  {
-    label: "Product",
-    links: [
-      { name: "Features", href: "#features" },
-      { name: "Pricing", href: "#pricing" },
-      { name: "Changelog", href: "#" },
-      { name: "Roadmap", href: "#" },
-    ],
-  },
-  {
-    label: "Resources",
-    links: [
-      { name: "Docs", href: "#" },
-      { name: "API", href: "#" },
-      { name: "Frontend (GitHub)", href: "https://github.com/Pr0degie/invoiceflow" },
-      { name: "Backend (GitHub)", href: "https://github.com/Pr0degie/invoice-api" },
-    ],
-  },
-  {
-    label: "Legal",
-    links: [
-      { name: "Imprint", href: "#" },
-      { name: "Privacy", href: "#" },
-      { name: "Terms", href: "#" },
-    ],
-  },
-];
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const socials = [
   {
@@ -57,7 +30,47 @@ const socials = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations("landing.footer");
+  const tNav = await getTranslations("common.nav");
+
+  const nav = [
+    {
+      label: t("nav.product"),
+      links: [
+        { name: tNav("features"), href: "#features" },
+        { name: t("nav.links.pricing"), href: "#pricing" },
+        { name: t("nav.links.changelog"), href: "#" },
+        { name: t("nav.links.roadmap"), href: "#" },
+      ],
+    },
+    {
+      label: t("nav.resources"),
+      links: [
+        { name: t("nav.links.docs"), href: "#" },
+        { name: t("nav.links.api"), href: "#" },
+        {
+          name: t("nav.links.frontendGitHub"),
+          href: "https://github.com/Pr0degie/invoiceflow",
+        },
+        {
+          name: t("nav.links.backendGitHub"),
+          href: "https://github.com/Pr0degie/invoice-api",
+        },
+      ],
+    },
+    {
+      label: t("nav.legal"),
+      links: [
+        { name: t("nav.links.imprint"), href: "#" },
+        { name: t("nav.links.privacy"), href: "#" },
+        { name: t("nav.links.terms"), href: "#" },
+      ],
+    },
+  ];
+
+  const year = new Date().getFullYear();
+
   return (
     <footer className="border-t bg-background">
       {/* Upper zone */}
@@ -69,8 +82,7 @@ export function Footer() {
               <Logo />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              Invoicing that gets out of your way. Built for DACH freelancers and
-              small businesses who want to focus on their work, not the paperwork.
+              {t("brand.tagline")}
             </p>
             {/* Socials */}
             <div className="flex gap-3 mt-5">
@@ -80,7 +92,9 @@ export function Footer() {
                   href={href}
                   aria-label={label}
                   className="size-8 rounded-md border border-border/60 flex items-center justify-center text-muted-foreground transition-colors hover:text-foreground hover:border-border"
-                  {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  {...(href.startsWith("http")
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
                 >
                   {icon}
                 </Link>
@@ -100,7 +114,9 @@ export function Footer() {
                     <Link
                       href={href}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                      {...(href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                      {...(href.startsWith("http")
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
                     >
                       {name}
                     </Link>
@@ -114,14 +130,17 @@ export function Footer() {
 
       {/* Lower zone */}
       <div className="border-t">
-        <div className="container mx-auto max-w-6xl px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="container mx-auto max-w-6xl px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} InvoiceFlow. All rights reserved.
+            {t("copyright", { year })}
           </p>
-          <p className="text-xs text-muted-foreground">
-            Built with{" "}
-            <span className="text-foreground/60">Next.js · Prisma · Stripe</span>
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-muted-foreground">
+              {t("builtWith")}{" "}
+              <span className="text-foreground/60">Next.js · Prisma · Stripe</span>
+            </p>
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
     </footer>

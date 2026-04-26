@@ -1,47 +1,32 @@
+import { getTranslations } from "next-intl/server";
 import { Zap, FileCheck, TrendingUp, Download } from "lucide-react";
 import { AnimatedSection } from "@/components/landing/animated-section";
 
-const features = [
-  {
-    icon: Zap,
-    title: "Invoices in seconds",
-    description:
-      "From recipient to ready-to-send PDF — the fastest way to create an invoice. No setup, no templates to configure.",
-  },
-  {
-    icon: FileCheck,
-    title: "GoBD compliant",
-    description:
-      "Immutable invoice numbers, audit-proof storage, and GDPR-secure infrastructure hosted in the EU.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Real-time overview",
-    description:
-      "Outstanding amounts, overdue invoices, and monthly revenue — visible at a glance on your dashboard.",
-  },
-  {
-    icon: Download,
-    title: "PDF export",
-    description:
-      "Professionally formatted PDFs, ready to send. No design work, no external tools, no extra cost.",
-  },
-];
+const featureIcons = [Zap, FileCheck, TrendingUp, Download];
+const featureKeys = ["fast", "gobd", "realtime", "pdf"] as const;
 
-export function Features() {
+export async function Features() {
+  const t = await getTranslations("landing.features");
+
+  const features = featureKeys.map((key, i) => ({
+    icon: featureIcons[i],
+    title: t(`items.${key}.title`),
+    description: t(`items.${key}.desc`),
+  }));
+
   return (
     <section id="features" className="py-20 md:py-28 bg-muted/30">
       <div className="container mx-auto max-w-6xl px-4">
         {/* Section header */}
         <AnimatedSection className="mb-12 md:mb-16 max-w-2xl">
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-            What&apos;s included
+            {t("eyebrow")}
           </p>
           <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-4">
-            Everything a freelancer actually needs
+            {t("title")}
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            No bloat. Just the tools that save you time on every invoice you send.
+            {t("sub")}
           </p>
         </AnimatedSection>
 

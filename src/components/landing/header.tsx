@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,19 +13,25 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "@/components/brand/logo";
 
-const navLinks = [
-  { name: "Features", href: "#features" },
-  { name: "Pricing", href: "#pricing" },
-  { name: "Docs", href: "#" },
-];
-
 export function Header() {
+  const t = useTranslations("common");
+
+  const navLinks = [
+    { name: t("nav.features"), href: "#features" },
+    { name: t("nav.pricing"), href: "#pricing" },
+    { name: t("nav.docs"), href: "#" },
+  ];
+
   return (
     <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="flex h-14 items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="shrink-0">
+          <Link
+            href="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="shrink-0"
+          >
             <Logo />
           </Link>
 
@@ -45,10 +52,12 @@ export function Header() {
           <div className="hidden md:flex items-center gap-2">
             <ThemeToggle />
             <Link href="/auth/login">
-              <Button variant="ghost" size="sm">Sign In</Button>
+              <Button variant="ghost" size="sm">
+                {t("actions.signIn")}
+              </Button>
             </Link>
             <Link href="/auth/register">
-              <Button size="sm">Get Started</Button>
+              <Button size="sm">{t("actions.getStarted")}</Button>
             </Link>
           </div>
 
@@ -85,12 +94,14 @@ export function Header() {
                 <div className="px-5 pt-2 pb-6 border-t border-border/50 mt-2 flex flex-col gap-2">
                   <SheetClose asChild>
                     <Link href="/auth/login">
-                      <Button variant="outline" className="w-full">Sign In</Button>
+                      <Button variant="outline" className="w-full">
+                        {t("actions.signIn")}
+                      </Button>
                     </Link>
                   </SheetClose>
                   <SheetClose asChild>
                     <Link href="/auth/register">
-                      <Button className="w-full">Get Started</Button>
+                      <Button className="w-full">{t("actions.getStarted")}</Button>
                     </Link>
                   </SheetClose>
                 </div>

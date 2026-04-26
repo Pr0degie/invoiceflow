@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export default function BillingPage() {
-  // Tracks which button is in-flight: "upgrade" | "cancel" | null.
   const [loading, setLoading] = useState<string | null>(null);
 
   async function handleUpgrade(priceId: string) {
@@ -19,7 +18,7 @@ export default function BillingPage() {
     });
     const data = await res.json();
     setLoading(null);
-    if (data.url) window.location.href = data.url; // redirect to Stripe-hosted checkout
+    if (data.url) window.location.href = data.url;
   }
 
   async function handleCancel() {
@@ -27,7 +26,7 @@ export default function BillingPage() {
     setLoading("cancel");
     await fetch("/api/stripe/cancel", { method: "POST" });
     setLoading(null);
-    window.location.reload(); // hard reload to reflect updated subscription state from the server
+    window.location.reload();
   }
 
   return (
@@ -52,7 +51,9 @@ export default function BillingPage() {
                 <div>
                   <p className="text-3xl font-bold text-gray-900">
                     {plan.price === 0 ? "Free" : `€${plan.price}`}
-                    {plan.price > 0 && <span className="text-base font-normal text-gray-500">/month</span>}
+                    {plan.price > 0 && (
+                      <span className="text-base font-normal text-gray-500">/month</span>
+                    )}
                   </p>
                   <ul className="mt-3 space-y-1">
                     {plan.features.map((f) => (
@@ -85,7 +86,9 @@ export default function BillingPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900">Cancel subscription</p>
-                <p className="text-sm text-gray-500">Your plan stays active until the end of the billing period.</p>
+                <p className="text-sm text-gray-500">
+                  Your plan stays active until the end of the billing period.
+                </p>
               </div>
               <Button
                 variant="danger"

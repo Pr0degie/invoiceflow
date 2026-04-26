@@ -1,18 +1,14 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validations";
-import type { User as PrismaUser } from "@prisma/client";
-import GitHub from "next-auth/providers/github";
-
-type ExtendedUser = PrismaUser & { role: string };
+import { apiClient } from "@/lib/api/client";
+import { refreshAccessToken } from "@/lib/auth/refresh";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
   trustHost: true,
-  // JWT required: Credentials provider is incompatible with database sessions.
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
@@ -20,44 +16,61 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
-      // Runs on sign-in: persist id and role into the token for later reads.
+      // On sign-in, user object is populated; merge invoice-api tokens into the JWT.
       if (user) {
-        const u = user as unknown as ExtendedUser;
-        token.id = u.id;
-        token.role = u.role ?? "USER";
-  }
-  return token;
-},
-    async session({ session, token }) {
-      // Expose id and role to the client session object.
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        token.id = user.id;
+        token.role = (user as { role?: string }).role ?? "USER";
+        token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
+        token.accessTokenExpires = user.accessTokenExpires;
+        return token;
       }
+
+      // On subsequent requests, check if the invoice-api access token is still valid.
+      if (!token.accessToken || !token.accessTokenExpires) return token;
+
+      const expiresAt = new Date(token.accessTokenExpires as string).getTime();
+      if (Date.now() < expiresAt - 30_000) {
+        // Token still valid (with 30 s buffer).
+        return token;
+      }
+
+      // Token expired — attempt silent refresh.
+      return refreshAccessToken(token);
+    },
+
+    async session({ session, token }) {
+      session.user.id = token.id as string;
+      session.user.role = (token.role as string) ?? "USER";
+      session.accessToken = token.accessToken as string | undefined;
+      session.error = token.error as "RefreshAccessTokenError" | undefined;
       return session;
     },
   },
   providers: [
-    GitHub({
-    clientId: process.env.GITHUB_CLIENT_ID!,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
     Credentials({
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const user = await db.user.findUnique({
-          where: { email: parsed.data.email },
+        const { data, error } = await apiClient.POST("/api/auth/login", {
+          body: {
+            email: parsed.data.email,
+            password: parsed.data.password,
+          },
         });
 
-        // No password means the account was created via OAuth — block credentials login.
-        if (!user?.password) return null;
+        if (error || !data?.token || !data?.user) return null;
 
-        const valid = await bcrypt.compare(parsed.data.password, user.password);
-        if (!valid) return null;
-
-        return user;
+        return {
+          id: data.user.id ?? "",
+          email: data.user.email ?? "",
+          name: data.user.name ?? "",
+          role: "USER",
+          accessToken: data.token,
+          refreshToken: data.refreshToken ?? undefined,
+          accessTokenExpires: data.expiresAt ?? undefined,
+        };
       },
     }),
   ],

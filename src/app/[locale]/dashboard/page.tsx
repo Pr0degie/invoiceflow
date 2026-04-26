@@ -10,7 +10,8 @@ export default async function DashboardPage() {
     where: { userId: session!.user.id },
   });
 
-  const isActive = subscription?.status === "ACTIVE" || subscription?.status === "TRIALING";
+  const isActive =
+    subscription?.status === "ACTIVE" || subscription?.status === "TRIALING";
 
   return (
     <div>
@@ -18,7 +19,9 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">
           Good to see you, {session!.user.name?.split(" ")[0] ?? "there"} 👋
         </h1>
-        <p className="text-gray-500 mt-1">Here&apos;s what&apos;s going on with your account.</p>
+        <p className="text-gray-500 mt-1">
+          Here&apos;s what&apos;s going on with your account.
+        </p>
       </div>
 
       <Card>
@@ -33,10 +36,14 @@ export default async function DashboardPage() {
         <CardContent>
           {isActive ? (
             <div className="space-y-1 text-sm text-gray-600">
-              <p>You&apos;re on the <span className="font-medium text-gray-900">Pro plan</span>.</p>
+              <p>
+                You&apos;re on the{" "}
+                <span className="font-medium text-gray-900">Pro plan</span>.
+              </p>
               {subscription?.cancelAtPeriodEnd && (
                 <p className="text-yellow-700">
-                  Your subscription will cancel on {formatDate(subscription.currentPeriodEnd!)}.
+                  Your subscription will cancel on{" "}
+                  {formatDate(subscription.currentPeriodEnd!)}.
                 </p>
               )}
               <p className="pt-2">
@@ -50,24 +57,16 @@ export default async function DashboardPage() {
           ) : (
             <div className="text-sm text-gray-600 space-y-3">
               <p>You&apos;re on the free tier. Upgrade to unlock all features.</p>
-
-              <a href="/dashboard/billing"
-                className="inline-flex items-center px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors">
+              <a
+                href="/dashboard/billing"
+                className="inline-flex items-center px-4 py-2 bg-brand-600 text-white rounded-lg text-sm font-medium hover:bg-brand-700 transition-colors"
+              >
                 Upgrade to Pro
               </a>
             </div>
           )}
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{label}</p>
-      <p className="text-xl font-semibold text-gray-900">{value}</p>
     </div>
   );
 }

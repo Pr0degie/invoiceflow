@@ -1,32 +1,44 @@
+import createMiddleware from "next-intl/middleware";
+import { routing } from "@/i18n/routing";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+
+const intlMiddleware = createMiddleware(routing);
 
 export default auth((req) => {
   const { nextUrl, auth: session } = req;
   const isLoggedIn = !!session?.user;
-  
+  const pathname = nextUrl.pathname;
 
-  const isAuthRoute = nextUrl.pathname.startsWith("/auth");
-  const isDashboard = nextUrl.pathname.startsWith("/dashboard");
-  const isAdmin = nextUrl.pathname.startsWith("/admin");
+  // Detect locale prefix for locale-aware redirects
+  const localeMatch = pathname.match(/^\/(de)(\/|$)/);
+  const locale = localeMatch ? localeMatch[1] : "en";
+  const localePrefix = locale === "en" ? "" : `/${locale}`;
 
-  // Prevent logged-in users from re-visiting login/register pages.
+  // Strip locale prefix to get the clean path for route matching
+  const pathWithoutLocale = pathname.replace(/^\/(de)(?=\/|$)/, "") || "/";
+
+  const isAuthRoute = pathWithoutLocale.startsWith("/auth");
+  const isDashboard = pathWithoutLocale.startsWith("/dashboard");
+  const isAdmin = pathWithoutLocale.startsWith("/admin");
+
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    return NextResponse.redirect(new URL(`${localePrefix}/dashboard`, nextUrl));
   }
 
   if (isDashboard && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/auth/login", nextUrl));
+    return NextResponse.redirect(
+      new URL(`${localePrefix}/auth/login`, nextUrl)
+    );
   }
-  // Non-admin users are silently redirected rather than shown a 403.
-  if (isAdmin && session?.user?.role !== "ADMIN") {
-  return NextResponse.redirect(new URL("/dashboard", nextUrl));
-}
 
-  return NextResponse.next();
+  if (isAdmin && session?.user?.role !== "ADMIN") {
+    return NextResponse.redirect(new URL(`${localePrefix}/dashboard`, nextUrl));
+  }
+
+  return intlMiddleware(req);
 });
 
 export const config = {
-  // Skip API routes and Next.js internals — middleware only guards pages.
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

@@ -36,7 +36,7 @@ export default function AccountPage() {
     if (!res.ok) {
       setError(data.error ?? "Something went wrong.");
     } else {
-      await update({ name, email }); // syncs the client-side NextAuth session without re-login
+      await update({ name, email });
       setPassword("");
       setMessage("Account updated successfully.");
     }
@@ -66,7 +66,10 @@ export default function AccountPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              New Password <span className="text-muted-foreground font-normal">(leave blank to keep current)</span>
+              New Password{" "}
+              <span className="text-muted-foreground font-normal">
+                (leave blank to keep current)
+              </span>
             </label>
             <Input
               type="password"
