@@ -137,7 +137,7 @@ export async function Footer() {
           <div className="flex items-center gap-4">
             <p className="text-xs text-muted-foreground">
               {t("builtWith")}{" "}
-              <span className="text-foreground/60">Next.js · Prisma · Stripe</span>
+              <span className="text-foreground/60">Next.js · Prisma</span>
             </p>
             <LanguageSwitcher />
           </div>

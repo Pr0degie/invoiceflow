@@ -197,5 +197,131 @@
     },
     "en": "English",
     "de": "Deutsch"
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Overview"
+    },
+    "greetings": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "kpi": {
+      "outstanding": "Outstanding",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "drafts": "Drafts",
+      "overdueInvoices": "{count, plural, =0 {No overdue invoices} one {# overdue invoice} other {# overdue invoices}}",
+      "draftInvoices": "{count, plural, =0 {No drafts} one {# draft} other {# drafts}}"
+    },
+    "range": {
+      "label": "Time range",
+      "30d": "Last 30 days",
+      "ytd": "This year",
+      "12m": "Last 12 months",
+      "all": "All time"
+    },
+    "chart": {
+      "title": "Revenue",
+      "chartSubtitle": "Last 12 months",
+      "paid": "Paid",
+      "outstanding": "Outstanding"
+    },
+    "activity": {
+      "title": "Recent invoices",
+      "viewAll": "All invoices",
+      "empty": "No invoices yet"
+    },
+    "empty": {
+      "title": "Welcome to InvoiceFlow",
+      "description": "Your dashboard stats appear here once you create your first invoice.",
+      "cta": "Create first invoice"
+    },
+    "error": {
+      "title": "Data couldn't be loaded",
+      "retry": "Try again"
+    }
+  },
+  "invoices": {
+    "title": "Invoices",
+    "newInvoice": "New invoice",
+    "searchPlaceholder": "Search by number or recipient…",
+    "status": {
+      "Draft": "Draft",
+      "Sent": "Sent",
+      "Paid": "Paid",
+      "Overdue": "Overdue",
+      "Cancelled": "Cancelled"
+    },
+    "statusOptions": {
+      "all": "All statuses"
+    },
+    "columns": {
+      "number": "Number",
+      "recipient": "Recipient",
+      "issued": "Issued",
+      "due": "Due",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "actions": {
+      "openMenu": "Open menu",
+      "view": "View",
+      "downloadPdf": "Download PDF",
+      "markAsPaid": "Mark as paid",
+      "markAsSent": "Mark as sent",
+      "delete": "Delete"
+    },
+    "delete": {
+      "title": "Delete invoice",
+      "description": "This invoice will be permanently deleted. This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "pagination": {
+      "showing": "Showing {from}–{to} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "empty": {
+      "title": "No invoices yet",
+      "description": "Create your first invoice to get started.",
+      "cta": "Create first invoice"
+    },
+    "filteredEmpty": {
+      "description": "No invoices match your current filters.",
+      "reset": "Reset filters"
+    },
+    "deleteSuccess": "Invoice deleted",
+    "error": {
+      "title": "Failed to load invoices",
+      "retry": "Try again"
+    }
+  },
+  "app": {
+    "nav": {
+      "overview": "Overview",
+      "invoices": "Invoices",
+      "settings": "Settings",
+      "newInvoice": "New invoice"
+    },
+    "user": {
+      "profile": "Profile",
+      "language": "Language",
+      "theme": "Theme",
+      "signOut": "Sign out"
+    },
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "pages": {
+      "overview": "Overview",
+      "invoices": "Invoices",
+      "settings": "Settings",
+      "newInvoice": "New invoice"
+    }
   }
 }

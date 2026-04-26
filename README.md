@@ -88,16 +88,17 @@ This is a **finance UI**, not a generic SaaS dashboard. That means:
 ## Local development
 
 ```bash
-git clone https://github.com/Pr0degie/invoiceflow-frontend
-cd invoiceflow-frontend
-pnpm install
-cp .env.example .env.local
-# edit .env.local — point NEXT_PUBLIC_API_BASE_URL at your invoice-api instance
-pnpm dev
+# 1. Backend — in ../invoice-api/
+docker compose up
+
+# 2. Frontend — in this repo
+npm install
+cp .env.example .env
+# Edit .env: set AUTH_SECRET=$(openssl rand -base64 32)
+npm run dev
 ```
 
-Frontend runs at `http://localhost:3000`. Requires a running [invoice-api](https://github.com/Pr0degie/invoice-api)
-backend (typically `http://localhost:8080` via `docker compose up`).
+Frontend runs at `http://localhost:3000`. Full env reference: `.env.example`.
 
 ### Scripts
 

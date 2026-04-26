@@ -197,5 +197,131 @@
     },
     "en": "English",
     "de": "Deutsch"
+  },
+  "dashboard": {
+    "overview": {
+      "title": "Übersicht"
+    },
+    "greetings": {
+      "morning": "Guten Morgen",
+      "afternoon": "Guten Tag",
+      "evening": "Guten Abend"
+    },
+    "kpi": {
+      "outstanding": "Ausstehend",
+      "paid": "Bezahlt",
+      "overdue": "Überfällig",
+      "drafts": "Entwürfe",
+      "overdueInvoices": "{count, plural, =0 {Keine überfälligen Rechnungen} one {# überfällige Rechnung} other {# überfällige Rechnungen}}",
+      "draftInvoices": "{count, plural, =0 {Keine Entwürfe} one {# Entwurf} other {# Entwürfe}}"
+    },
+    "range": {
+      "label": "Zeitraum",
+      "30d": "Letzte 30 Tage",
+      "ytd": "Dieses Jahr",
+      "12m": "Letzte 12 Monate",
+      "all": "Gesamt"
+    },
+    "chart": {
+      "title": "Umsatz",
+      "chartSubtitle": "Letzte 12 Monate",
+      "paid": "Bezahlt",
+      "outstanding": "Ausstehend"
+    },
+    "activity": {
+      "title": "Letzte Rechnungen",
+      "viewAll": "Alle Rechnungen",
+      "empty": "Noch keine Rechnungen"
+    },
+    "empty": {
+      "title": "Willkommen bei InvoiceFlow",
+      "description": "Ihre Dashboard-Statistiken erscheinen hier, sobald Sie Ihre erste Rechnung erstellt haben.",
+      "cta": "Erste Rechnung erstellen"
+    },
+    "error": {
+      "title": "Daten konnten nicht geladen werden",
+      "retry": "Erneut versuchen"
+    }
+  },
+  "invoices": {
+    "title": "Rechnungen",
+    "newInvoice": "Neue Rechnung",
+    "searchPlaceholder": "Nach Nummer oder Empfänger suchen…",
+    "status": {
+      "Draft": "Entwurf",
+      "Sent": "Versendet",
+      "Paid": "Bezahlt",
+      "Overdue": "Überfällig",
+      "Cancelled": "Storniert"
+    },
+    "statusOptions": {
+      "all": "Alle Status"
+    },
+    "columns": {
+      "number": "Nummer",
+      "recipient": "Empfänger",
+      "issued": "Ausgestellt",
+      "due": "Fällig",
+      "amount": "Betrag",
+      "status": "Status"
+    },
+    "actions": {
+      "openMenu": "Menü öffnen",
+      "view": "Ansehen",
+      "downloadPdf": "PDF herunterladen",
+      "markAsPaid": "Als bezahlt markieren",
+      "markAsSent": "Als versendet markieren",
+      "delete": "Löschen"
+    },
+    "delete": {
+      "title": "Rechnung löschen",
+      "description": "Diese Rechnung wird dauerhaft gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirm": "Löschen",
+      "cancel": "Abbrechen"
+    },
+    "pagination": {
+      "showing": "{from}–{to} von {total} angezeigt",
+      "previous": "Zurück",
+      "next": "Weiter"
+    },
+    "empty": {
+      "title": "Noch keine Rechnungen",
+      "description": "Erstellen Sie Ihre erste Rechnung, um loszulegen.",
+      "cta": "Erste Rechnung erstellen"
+    },
+    "filteredEmpty": {
+      "description": "Keine Rechnungen entsprechen den aktuellen Filtern.",
+      "reset": "Filter zurücksetzen"
+    },
+    "deleteSuccess": "Rechnung gelöscht",
+    "error": {
+      "title": "Rechnungen konnten nicht geladen werden",
+      "retry": "Erneut versuchen"
+    }
+  },
+  "app": {
+    "nav": {
+      "overview": "Übersicht",
+      "invoices": "Rechnungen",
+      "settings": "Einstellungen",
+      "newInvoice": "Neue Rechnung"
+    },
+    "user": {
+      "profile": "Profil",
+      "language": "Sprache",
+      "theme": "Design",
+      "signOut": "Abmelden"
+    },
+    "theme": {
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    },
+    "pages": {
+      "overview": "Übersicht",
+      "invoices": "Rechnungen",
+      "settings": "Einstellungen",
+      "newInvoice": "Neue Rechnung"
+    }
   }
 }

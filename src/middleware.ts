@@ -19,21 +19,16 @@ export default auth((req) => {
   const pathWithoutLocale = pathname.replace(/^\/(de)(?=\/|$)/, "") || "/";
 
   const isAuthRoute = pathWithoutLocale.startsWith("/auth");
-  const isDashboard = pathWithoutLocale.startsWith("/dashboard");
-  const isAdmin = pathWithoutLocale.startsWith("/admin");
+  const isApp = pathWithoutLocale.startsWith("/app");
 
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL(`${localePrefix}/dashboard`, nextUrl));
+    return NextResponse.redirect(new URL(`${localePrefix}/app`, nextUrl));
   }
 
-  if (isDashboard && !isLoggedIn) {
+  if (isApp && !isLoggedIn) {
     return NextResponse.redirect(
       new URL(`${localePrefix}/auth/login`, nextUrl)
     );
-  }
-
-  if (isAdmin && session?.user?.role !== "ADMIN") {
-    return NextResponse.redirect(new URL(`${localePrefix}/dashboard`, nextUrl));
   }
 
   return intlMiddleware(req);
