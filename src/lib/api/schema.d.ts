@@ -339,6 +339,7 @@ export interface paths {
                     status?: components["schemas"]["InvoiceStatus"];
                     page?: number;
                     pageSize?: number;
+                    search?: string;
                 };
                 header?: never;
                 path?: never;
@@ -437,7 +438,52 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateInvoiceRequest"];
+                    "text/json": components["schemas"]["CreateInvoiceRequest"];
+                    "application/*+json": components["schemas"]["CreateInvoiceRequest"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete: {
             parameters: {

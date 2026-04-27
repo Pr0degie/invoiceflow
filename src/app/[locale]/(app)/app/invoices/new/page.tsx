@@ -1,11 +1,7 @@
-import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth";
+import { InvoiceFormCreate } from "@/components/app/invoice-form";
 
 export default async function NewInvoicePage() {
-  const t = await getTranslations("app.pages");
-
-  return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight">{t("newInvoice")}</h1>
-    </div>
-  );
+  const session = await auth();
+  return <InvoiceFormCreate userName={session?.user?.name ?? undefined} />;
 }

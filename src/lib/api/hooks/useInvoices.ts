@@ -154,6 +154,41 @@ export function useDeleteInvoice() {
   });
 }
 
+export function useUpdateInvoice() {
+  const token = useToken();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: CreateInvoiceInput;
+    }) => {
+      const result = await apiClient.PUT("/api/invoices/{id}", {
+        params: { path: { id } },
+        body: data,
+        headers: bearerHeader(token),
+      });
+      throwOnError(result, result.error);
+      return result.data as Invoice;
+    },
+    onSuccess: (updatedInvoice, { id }) => {
+      queryClient.setQueryData(queryKeys.invoices.detail(id), updatedInvoice);
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.lists() });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (err) => {
+      const msg =
+        err instanceof ApiError && err.isConflict
+          ? "Only draft invoices can be edited."
+          : "Invoice could not be saved.";
+      toast.error(msg);
+    },
+  });
+}
+
 export function useDownloadInvoicePdf() {
   const token = useToken();
 

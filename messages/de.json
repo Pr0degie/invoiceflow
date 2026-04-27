@@ -297,6 +297,127 @@
     "error": {
       "title": "Rechnungen konnten nicht geladen werden",
       "retry": "Erneut versuchen"
+    },
+    "detail": {
+      "downloading": "Wird erstellt…",
+      "edit": "Bearbeiten",
+      "markAsOverdue": "Als überfällig markieren",
+      "invoiceTo": "Rechnung an",
+      "invoiceNumber": "Rechnungs-Nr.",
+      "date": "Datum",
+      "dueDate": "Fällig",
+      "lineItems": {
+        "description": "Beschreibung",
+        "qty": "Menge",
+        "unit": "Einheit",
+        "unitPrice": "Einzelpreis",
+        "amount": "Betrag"
+      },
+      "subtotal": "Zwischensumme",
+      "vat": "MwSt. ({rate} %)",
+      "total": "Gesamtbetrag",
+      "notes": "Hinweise",
+      "timeline": {
+        "title": "Verlauf",
+        "created": "Erstellt",
+        "sent": "Versendet",
+        "paid": "Bezahlt",
+        "notYet": "Noch nicht"
+      },
+      "metadata": {
+        "title": "Details",
+        "created": "Erstellt",
+        "updated": "Zuletzt aktualisiert",
+        "paidOn": "Bezahlt am"
+      },
+      "statusSuccess": "Status aktualisiert",
+      "deleteTitle": "Rechnung löschen?",
+      "deleteDescription": "Rechnung {number} wird dauerhaft gelöscht.",
+      "notFound": "Rechnung nicht gefunden",
+      "notFoundDescription": "Diese Rechnung wurde möglicherweise gelöscht oder Sie haben keinen Zugriff.",
+      "backToList": "Zurück zur Übersicht",
+      "loadError": "Rechnung konnte nicht geladen werden",
+      "retry": "Erneut versuchen"
+    },
+    "form": {
+      "newTitle": "Neue Rechnung",
+      "editTitle": "Rechnung bearbeiten",
+      "breadcrumbNew": "Neu",
+      "breadcrumbEdit": "Bearbeiten",
+      "sections": {
+        "sender": "Ihre Daten",
+        "recipient": "Empfänger",
+        "details": "Rechnungsdetails",
+        "lineItems": "Positionen",
+        "totals": "Summen",
+        "notes": "Hinweise"
+      },
+      "fields": {
+        "senderName": "Firma / Name",
+        "senderAddress": "Adresse",
+        "recipientName": "Empfängername",
+        "recipientAddress": "Empfängeradresse",
+        "invoiceNumber": "Rechnungsnummer",
+        "invoiceNumberAuto": "Wird beim Speichern vergeben",
+        "issueDate": "Rechnungsdatum",
+        "dueDate": "Fälligkeitsdatum",
+        "currency": "Währung",
+        "taxRate": "Steuersatz",
+        "notes": "Hinweise (optional)"
+      },
+      "lineItem": {
+        "description": "Beschreibung",
+        "quantity": "Menge",
+        "unit": "Einheit",
+        "unitPrice": "Einzelpreis",
+        "amount": "Betrag",
+        "addItem": "Position hinzufügen",
+        "remove": "Entfernen"
+      },
+      "units": {
+        "h": "h",
+        "flat": "pauschal",
+        "piece": "Stück",
+        "day": "Tag"
+      },
+      "taxRates": {
+        "0": "0% (steuerfrei)",
+        "7": "7%",
+        "19": "19%"
+      },
+      "dueDatePresets": {
+        "immediate": "Sofort",
+        "14days": "14 Tage",
+        "30days": "30 Tage"
+      },
+      "actions": {
+        "cancel": "Abbrechen",
+        "saveAsDraft": "Als Entwurf speichern",
+        "createAndSend": "Erstellen & Senden",
+        "saveChanges": "Änderungen speichern",
+        "saveAndSend": "Speichern & Senden",
+        "saving": "Wird gespeichert…",
+        "sending": "Wird gesendet…"
+      },
+      "discard": {
+        "title": "Änderungen verwerfen?",
+        "description": "Sie haben ungespeicherte Änderungen. Diese gehen verloren, wenn Sie jetzt die Seite verlassen.",
+        "confirm": "Verwerfen",
+        "cancel": "Weiterbearbeiten"
+      },
+      "errors": {
+        "required": "Pflichtfeld",
+        "positiveRequired": "Muss größer als 0 sein",
+        "atLeastOneItem": "Mindestens eine Position erforderlich",
+        "loadFailed": "Rechnung konnte nicht geladen werden",
+        "notDraft": "Nur Entwürfe können bearbeitet werden"
+      },
+      "success": {
+        "created": "Rechnung erstellt",
+        "updated": "Rechnung gespeichert",
+        "createdAndSent": "Rechnung erstellt und versendet",
+        "updatedAndSent": "Rechnung gespeichert und versendet"
+      }
     }
   },
   "app": {
