@@ -195,7 +195,7 @@ export function useDownloadInvoicePdf() {
   return useMutation({
     mutationFn: async ({ id, number }: { id: string; number: string }) => {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/invoices/${id}/pdf`,
+        `/api/backend/api/invoices/${id}/pdf`,
         { headers: bearerHeader(token) as HeadersInit }
       );
       if (!response.ok) throw new ApiError(response.status, null);

@@ -13,9 +13,15 @@ import type { paths } from "./schema";
  *     headers: { Authorization: `Bearer ${token}` },
  *   });
  */
-export const apiClient = createClient<paths>({
-  baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080",
-});
+// Server-side: call the backend directly. Client-side: go through the
+// Next.js rewrite proxy at /api/backend so the browser stays same-origin
+// and no CORS headers are needed.
+const baseUrl =
+  typeof window === "undefined"
+    ? (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080")
+    : "/api/backend";
+
+export const apiClient = createClient<paths>({ baseUrl });
 
 /** Convenience: build the Authorization header value from a token string. */
 export function bearerHeader(token: string | undefined | null) {
