@@ -443,6 +443,53 @@
       "invoices": "Rechnungen",
       "settings": "Einstellungen",
       "newInvoice": "Neue Rechnung"
+    },
+    "settings": {
+      "tabs": {
+        "profile": "Profil",
+        "sender": "Absenderdaten",
+        "security": "Sicherheit",
+        "language": "Sprache"
+      },
+      "profile": {
+        "title": "Profil",
+        "description": "Deine persönlichen Informationen.",
+        "name": "Name",
+        "namePlaceholder": "Dein Name",
+        "email": "E-Mail-Adresse",
+        "emailNote": "Wende dich an den Support, um deine E-Mail-Adresse zu ändern.",
+        "save": "Änderungen speichern"
+      },
+      "sender": {
+        "title": "Absenderdaten",
+        "description": "Werden auf neuen Rechnungen vorausgefüllt. Können pro Rechnung überschrieben werden.",
+        "name": "Unternehmen / Name",
+        "namePlaceholder": "z.B. Tobias Müller",
+        "address": "Adresse",
+        "addressPlaceholder": "Musterstraße 1\n12345 Musterstadt\nDeutschland",
+        "save": "Änderungen speichern"
+      },
+      "security": {
+        "title": "Passwort ändern",
+        "description": "Verwende ein starkes, einzigartiges Passwort.",
+        "current": "Aktuelles Passwort",
+        "new": "Neues Passwort",
+        "confirm": "Neues Passwort bestätigen",
+        "save": "Passwort ändern"
+      },
+      "language": {
+        "title": "Sprache",
+        "description": "Änderungen werden sofort übernommen.",
+        "en": "English",
+        "de": "Deutsch"
+      },
+      "danger": {
+        "title": "Gefahrenzone",
+        "description": "Unwiderrufliche Aktionen.",
+        "deleteAccount": "Konto löschen",
+        "deleteDescription": "Löscht dein Konto und alle Rechnungen dauerhaft."
+      },
+      "comingSoon": "Demnächst verfügbar"
     }
   }
 }

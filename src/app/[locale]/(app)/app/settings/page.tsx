@@ -1,11 +1,10 @@
-import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
+import { SettingsView } from "@/components/app/settings-view";
 
-export default async function SettingsPage() {
-  const t = await getTranslations("app.pages");
-
+export default function SettingsPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-semibold tracking-tight">{t("settings")}</h1>
-    </div>
+    <Suspense>
+      <SettingsView />
+    </Suspense>
   );
 }

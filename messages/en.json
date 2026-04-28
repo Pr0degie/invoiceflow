@@ -443,6 +443,53 @@
       "invoices": "Invoices",
       "settings": "Settings",
       "newInvoice": "New invoice"
+    },
+    "settings": {
+      "tabs": {
+        "profile": "Profile",
+        "sender": "Sender defaults",
+        "security": "Security",
+        "language": "Language"
+      },
+      "profile": {
+        "title": "Profile",
+        "description": "Your personal information.",
+        "name": "Name",
+        "namePlaceholder": "Your name",
+        "email": "Email address",
+        "emailNote": "Contact support to change your email address.",
+        "save": "Save changes"
+      },
+      "sender": {
+        "title": "Sender defaults",
+        "description": "Pre-filled on new invoices. Can be overridden per invoice.",
+        "name": "Business / Name",
+        "namePlaceholder": "e.g. Tobias Müller",
+        "address": "Address",
+        "addressPlaceholder": "Street 1\n12345 City\nGermany",
+        "save": "Save changes"
+      },
+      "security": {
+        "title": "Change password",
+        "description": "Use a strong, unique password.",
+        "current": "Current password",
+        "new": "New password",
+        "confirm": "Confirm new password",
+        "save": "Change password"
+      },
+      "language": {
+        "title": "Language",
+        "description": "Changes apply immediately.",
+        "en": "English",
+        "de": "Deutsch"
+      },
+      "danger": {
+        "title": "Danger zone",
+        "description": "Irreversible actions.",
+        "deleteAccount": "Delete account",
+        "deleteDescription": "Permanently deletes your account and all invoices."
+      },
+      "comingSoon": "Coming soon"
     }
   }
 }
