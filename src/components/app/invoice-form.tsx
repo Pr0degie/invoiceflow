@@ -64,10 +64,10 @@ const TODAY = format(new Date(), "yyyy-MM-dd");
 const IN_14 = format(addDays(new Date(), 14), "yyyy-MM-dd");
 const IN_30 = format(addDays(new Date(), 30), "yyyy-MM-dd");
 
-function getCreateDefaults(userName?: string): InvoiceFormValues {
+function getCreateDefaults(d?: { senderName?: string; senderAddress?: string }): InvoiceFormValues {
   return {
-    senderName: userName ?? "",
-    senderAddress: "",
+    senderName: d?.senderName ?? "",
+    senderAddress: d?.senderAddress ?? "",
     recipientName: "",
     recipientAddress: "",
     issueDate: TODAY,
@@ -121,9 +121,9 @@ function mapFormToApi(values: InvoiceFormValues) {
 }
 
 
-/** Rendered directly on the /invoices/new page (server passes userName). */
-export function InvoiceFormCreate({ userName }: { userName?: string }) {
-  return <InvoiceForm mode="create" userName={userName} />;
+/** Rendered directly on the /invoices/new page (server passes sender defaults). */
+export function InvoiceFormCreate({ defaults }: { defaults?: { senderName?: string; senderAddress?: string } }) {
+  return <InvoiceForm mode="create" defaults={defaults} />;
 }
 
 /** Loads the invoice then renders the edit form. Used on /invoices/[id]/edit. */
@@ -171,13 +171,13 @@ export function InvoiceFormEditLoader({ id }: { id: string }) {
 
 
 type Props =
-  | { mode: "create"; userName?: string }
+  | { mode: "create"; defaults?: { senderName?: string; senderAddress?: string } }
   | { mode: "edit"; invoice: Invoice };
 
 function InvoiceForm(props: Props) {
   const { mode } = props;
   const invoice = mode === "edit" ? props.invoice : undefined;
-  const userName = mode === "create" ? props.userName : undefined;
+  const defaults = mode === "create" ? props.defaults : undefined;
 
   const t = useTranslations("invoices");
   const tf = useTranslations("invoices.form");
@@ -198,7 +198,7 @@ function InvoiceForm(props: Props) {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues:
-      mode === "edit" ? mapInvoiceToForm(invoice!) : getCreateDefaults(userName),
+      mode === "edit" ? mapInvoiceToForm(invoice!) : getCreateDefaults(defaults),
     mode: "onBlur",
   });
 

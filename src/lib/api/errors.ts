@@ -19,4 +19,8 @@ export class ApiError extends Error {
   get isNotFound() {
     return this.status === 404;
   }
+
+  get isBadRequest() {
+    return this.status === 400;
+  }
 }

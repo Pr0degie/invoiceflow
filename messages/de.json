@@ -458,7 +458,10 @@
         "namePlaceholder": "Dein Name",
         "email": "E-Mail-Adresse",
         "emailNote": "Wende dich an den Support, um deine E-Mail-Adresse zu ändern.",
-        "save": "Änderungen speichern"
+        "save": "Änderungen speichern",
+        "saving": "Speichert…",
+        "saved": "Profil gespeichert. Der neue Name erscheint nach dem nächsten Login.",
+        "error": "Profil konnte nicht gespeichert werden."
       },
       "sender": {
         "title": "Absenderdaten",
@@ -467,7 +470,10 @@
         "namePlaceholder": "z.B. Tobias Müller",
         "address": "Adresse",
         "addressPlaceholder": "Musterstraße 1\n12345 Musterstadt\nDeutschland",
-        "save": "Änderungen speichern"
+        "save": "Änderungen speichern",
+        "saving": "Speichert…",
+        "saved": "Absenderdaten gespeichert.",
+        "error": "Absenderdaten konnten nicht gespeichert werden."
       },
       "security": {
         "title": "Passwort ändern",
@@ -475,7 +481,15 @@
         "current": "Aktuelles Passwort",
         "new": "Neues Passwort",
         "confirm": "Neues Passwort bestätigen",
-        "save": "Passwort ändern"
+        "save": "Passwort ändern",
+        "saving": "Wird geändert…",
+        "saved": "Passwort geändert. Andere Sessions wurden abgemeldet.",
+        "error": "Passwort konnte nicht geändert werden.",
+        "errors": {
+          "invalidCurrent": "Aktuelles Passwort ist falsch.",
+          "passwordMismatch": "Passwörter stimmen nicht überein.",
+          "passwordTooShort": "Mindestens 8 Zeichen."
+        }
       },
       "language": {
         "title": "Sprache",
@@ -487,7 +501,13 @@
         "title": "Gefahrenzone",
         "description": "Unwiderrufliche Aktionen.",
         "deleteAccount": "Konto löschen",
-        "deleteDescription": "Löscht dein Konto und alle Rechnungen dauerhaft."
+        "deleteDescription": "Löscht dein Konto und alle Rechnungen dauerhaft.",
+        "confirmTitle": "Konto löschen?",
+        "confirmDescription": "Dies löscht dein Konto, alle Rechnungen und alle Sessions endgültig. Tippe zur Bestätigung deine E-Mail ein.",
+        "confirmEmailPlaceholder": "Deine E-Mail",
+        "confirmAction": "Konto endgültig löschen",
+        "cancel": "Abbrechen",
+        "error": "Konto konnte nicht gelöscht werden."
       },
       "comingSoon": "Demnächst verfügbar"
     }

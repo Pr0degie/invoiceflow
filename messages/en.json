@@ -458,7 +458,10 @@
         "namePlaceholder": "Your name",
         "email": "Email address",
         "emailNote": "Contact support to change your email address.",
-        "save": "Save changes"
+        "save": "Save changes",
+        "saving": "Saving…",
+        "saved": "Profile updated. The new name appears on your next login.",
+        "error": "Could not save profile."
       },
       "sender": {
         "title": "Sender defaults",
@@ -467,7 +470,10 @@
         "namePlaceholder": "e.g. Tobias Müller",
         "address": "Address",
         "addressPlaceholder": "Street 1\n12345 City\nGermany",
-        "save": "Save changes"
+        "save": "Save changes",
+        "saving": "Saving…",
+        "saved": "Sender defaults updated.",
+        "error": "Could not save sender defaults."
       },
       "security": {
         "title": "Change password",
@@ -475,7 +481,15 @@
         "current": "Current password",
         "new": "New password",
         "confirm": "Confirm new password",
-        "save": "Change password"
+        "save": "Change password",
+        "saving": "Changing…",
+        "saved": "Password changed. Other sessions are signed out.",
+        "error": "Could not change password.",
+        "errors": {
+          "invalidCurrent": "Current password is incorrect.",
+          "passwordMismatch": "Passwords do not match.",
+          "passwordTooShort": "Minimum 8 characters."
+        }
       },
       "language": {
         "title": "Language",
@@ -487,7 +501,13 @@
         "title": "Danger zone",
         "description": "Irreversible actions.",
         "deleteAccount": "Delete account",
-        "deleteDescription": "Permanently deletes your account and all invoices."
+        "deleteDescription": "Permanently deletes your account and all invoices.",
+        "confirmTitle": "Delete account?",
+        "confirmDescription": "This permanently deletes your account, all invoices, and all sessions. To confirm, type your email below.",
+        "confirmEmailPlaceholder": "Your email",
+        "confirmAction": "Delete account permanently",
+        "cancel": "Cancel",
+        "error": "Could not delete account."
       },
       "comingSoon": "Coming soon"
     }
