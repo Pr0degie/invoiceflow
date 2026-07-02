@@ -71,7 +71,7 @@ export function RevenueChart({ data, loading }: RevenueChartProps) {
   const chartData = (data ?? []).map((row) => ({
     month: formatMonthLabel(row.month ?? "", locale),
     [t("paid")]: row.paid ?? 0,
-    [t("outstanding")]: row.sent ?? 0,
+    [t("outstanding")]: row.finalized ?? 0,
   }));
 
   return (

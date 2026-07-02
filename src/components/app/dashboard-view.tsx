@@ -77,11 +77,11 @@ export function DashboardView({ userName }: DashboardViewProps) {
     )
     .slice(0, 5);
 
+  // overdueCount is a subset of finalizedCount (derived from due dates)
   const totalInvoiceCount =
     (stats?.paidCount ?? 0) +
-    (stats?.sentCount ?? 0) +
-    (stats?.draftCount ?? 0) +
-    (stats?.overdueCount ?? 0);
+    (stats?.finalizedCount ?? 0) +
+    (stats?.draftCount ?? 0);
 
   const isEmpty = !statsLoading && !!stats && totalInvoiceCount === 0;
   const isSilentRefetch = statsFetching && !statsLoading && !isEmpty;

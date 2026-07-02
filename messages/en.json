@@ -249,7 +249,7 @@
     "searchPlaceholder": "Search by number or recipient…",
     "status": {
       "Draft": "Draft",
-      "Sent": "Sent",
+      "Finalized": "Open",
       "Paid": "Paid",
       "Overdue": "Overdue",
       "Cancelled": "Cancelled"
@@ -270,8 +270,10 @@
       "view": "View",
       "downloadPdf": "Download PDF",
       "markAsPaid": "Mark as paid",
-      "markAsSent": "Mark as sent",
-      "delete": "Delete"
+      "delete": "Delete",
+      "finalize": "Finalize",
+      "storno": "Cancel (Storno)",
+      "markAsUnpaid": "Mark as unpaid"
     },
     "delete": {
       "title": "Delete invoice",
@@ -301,7 +303,6 @@
     "detail": {
       "downloading": "Generating…",
       "edit": "Edit",
-      "markAsOverdue": "Mark as overdue",
       "invoiceTo": "Invoice to",
       "invoiceNumber": "Invoice #",
       "date": "Date",
@@ -320,8 +321,9 @@
       "timeline": {
         "title": "Timeline",
         "created": "Created",
-        "sent": "Sent",
+        "finalized": "Finalized",
         "paid": "Paid",
+        "cancelled": "Cancelled",
         "notYet": "Not yet"
       },
       "metadata": {
@@ -337,7 +339,11 @@
       "notFoundDescription": "This invoice may have been deleted or you don't have access.",
       "backToList": "Back to invoices",
       "loadError": "Failed to load invoice",
-      "retry": "Try again"
+      "retry": "Try again",
+      "serviceDate": "Service date",
+      "servicePeriod": "Service period",
+      "cancellationBadge": "Cancellation invoice",
+      "smallBusinessNote": "No VAT charged (§ 19 UStG)."
     },
     "form": {
       "newTitle": "New invoice",
@@ -358,12 +364,18 @@
         "recipientName": "Recipient name",
         "recipientAddress": "Recipient address",
         "invoiceNumber": "Invoice number",
-        "invoiceNumberAuto": "Auto-generated on save",
+        "invoiceNumberAuto": "Assigned at finalization",
         "issueDate": "Issue date",
         "dueDate": "Due date",
         "currency": "Currency",
         "taxRate": "Tax rate",
-        "notes": "Notes (optional)"
+        "notes": "Notes (optional)",
+        "servicePerformed": "Service rendered (Leistungsdatum)",
+        "serviceModeDate": "Single date",
+        "serviceModePeriod": "Period",
+        "serviceDate": "Service date",
+        "servicePeriodStart": "Period start",
+        "servicePeriodEnd": "Period end"
       },
       "lineItem": {
         "description": "Description",
@@ -393,11 +405,9 @@
       "actions": {
         "cancel": "Cancel",
         "saveAsDraft": "Save as draft",
-        "createAndSend": "Create & send",
         "saveChanges": "Save changes",
-        "saveAndSend": "Save & send",
         "saving": "Saving…",
-        "sending": "Sending…"
+        "saveAndFinalize": "Save & finalize"
       },
       "discard": {
         "title": "Discard changes?",
@@ -410,14 +420,35 @@
         "positiveRequired": "Must be greater than 0",
         "atLeastOneItem": "Add at least one line item",
         "loadFailed": "Failed to load invoice",
-        "notDraft": "Only draft invoices can be edited"
+        "notDraft": "Only draft invoices can be edited",
+        "periodEndBeforeStart": "Must not be before the start"
       },
       "success": {
         "created": "Invoice created",
         "updated": "Invoice updated",
-        "createdAndSent": "Invoice created and sent",
-        "updatedAndSent": "Invoice saved and sent"
-      }
+        "finalized": "Invoice {number} finalized"
+      },
+      "finalize": {
+        "title": "Finalize invoice?",
+        "description": "The invoice receives its final sequential number and cannot be edited afterwards. Corrections then require a cancellation invoice (Storno).",
+        "cancel": "Cancel",
+        "confirm": "Finalize",
+        "profileIncomplete": "Finalizing requires your tax details (address plus tax number or VAT ID).",
+        "goToSettings": "Complete settings"
+      },
+      "smallBusinessHint": "No VAT is charged in accordance with § 19 UStG (small business scheme).",
+      "smallBusinessTaxNote": "0% — § 19 UStG small business"
+    },
+    "draftNumber": "Draft",
+    "storno": {
+      "title": "Cancel this invoice?",
+      "description": "This issues a cancellation invoice (Stornorechnung) with negative amounts for {number} and marks the original as cancelled. This cannot be undone.",
+      "cancel": "Keep invoice",
+      "confirm": "Issue cancellation invoice",
+      "success": "Cancellation invoice {number} issued",
+      "referencesOriginal": "This cancellation invoice reverses invoice {number}.",
+      "viewOriginal": "View original",
+      "cancelledBy": "This invoice was cancelled by cancellation invoice {number}."
     }
   },
   "app": {
@@ -448,6 +479,7 @@
       "tabs": {
         "profile": "Profile",
         "sender": "Sender defaults",
+        "tax": "Taxes & invoicing",
         "security": "Security",
         "language": "Language"
       },
@@ -509,7 +541,35 @@
         "cancel": "Cancel",
         "error": "Could not delete account."
       },
-      "comingSoon": "Coming soon"
+      "comingSoon": "Coming soon",
+      "tax": {
+        "title": "Tax details",
+        "description": "Shown on every finalized invoice (§ 14 UStG).",
+        "taxNumber": "Tax number (Steuernummer)",
+        "vatId": "VAT ID (USt-IdNr.)",
+        "taxIdNote": "At least one of the two is required before invoices can be finalized.",
+        "smallBusiness": "Small business (§ 19 UStG)",
+        "smallBusinessOn": "Invoices show no VAT and carry the § 19 UStG notice.",
+        "smallBusinessOff": "Invoices include VAT (19 / 7 / 0 %).",
+        "addressTitle": "Business address",
+        "addressDescription": "Required as the sender address on invoices.",
+        "street": "Street and number",
+        "postalCode": "Postal code",
+        "city": "City",
+        "country": "Country",
+        "bankTitle": "Bank details",
+        "bankDescription": "Shown in the invoice footer so clients can pay you.",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bankName": "Bank",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Tax settings saved",
+        "incompleteHint": "Tax details incomplete — invoices cannot be finalized yet.",
+        "errors": {
+          "iban": "Invalid IBAN format"
+        }
+      }
     }
   }
 }

@@ -127,6 +127,64 @@ export function useUpdateInvoiceStatus() {
   });
 }
 
+// Finalization assigns the sequential number, freezes the invoice, and archives
+// its PDF — no optimistic update, the server response is the source of truth.
+export function useFinalizeInvoice() {
+  const token = useToken();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await apiClient.POST("/api/invoices/{id}/finalize", {
+        params: { path: { id } },
+        headers: bearerHeader(token),
+      });
+      throwOnError(result, result.error);
+      return result.data as Invoice;
+    },
+    onSuccess: (invoice, id) => {
+      queryClient.setQueryData(queryKeys.invoices.detail(id), invoice);
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.lists() });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (err) => {
+      // 409 carries an actionable reason (incomplete tax profile, missing
+      // service date) — surface it instead of a generic line.
+      const body =
+        err instanceof ApiError ? (err.body as { error?: string } | null) : null;
+      toast.error(body?.error ?? "Invoice could not be finalized.");
+    },
+  });
+}
+
+// Storno: issues a reversing Cancellation invoice and sets the original to
+// Cancelled. Returns the Stornorechnung.
+export function useCancelInvoice() {
+  const token = useToken();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await apiClient.POST("/api/invoices/{id}/cancel", {
+        params: { path: { id } },
+        headers: bearerHeader(token),
+      });
+      throwOnError(result, result.error);
+      return result.data as Invoice;
+    },
+    onSuccess: (_storno, id) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.detail(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.lists() });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (err) => {
+      const body =
+        err instanceof ApiError ? (err.body as { error?: string } | null) : null;
+      toast.error(body?.error ?? "Invoice could not be cancelled.");
+    },
+  });
+}
+
 export function useDeleteInvoice() {
   const token = useToken();
   const queryClient = useQueryClient();
@@ -192,7 +250,7 @@ export function useDownloadInvoicePdf() {
   const token = useToken();
 
   return useMutation({
-    mutationFn: async ({ id, number }: { id: string; number: string }) => {
+    mutationFn: async ({ id, number }: { id: string; number: string | null | undefined }) => {
       const response = await fetch(
         `/api/backend/api/invoices/${id}/pdf`,
         { headers: bearerHeader(token) as HeadersInit }
@@ -203,7 +261,7 @@ export function useDownloadInvoicePdf() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${number}.pdf`;
+      a.download = `${number ?? "Entwurf"}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     },

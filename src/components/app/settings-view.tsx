@@ -21,8 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { isTaxProfileComplete } from "@/lib/tax-profile";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -36,7 +38,7 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { useMe, useUpdateProfile, useChangePassword, useDeleteAccount } from "@/lib/api/hooks/useMe";
 
-const TABS = ["profile", "sender", "security", "language"] as const;
+const TABS = ["profile", "sender", "tax", "security", "language"] as const;
 type Tab = (typeof TABS)[number];
 
 function isValidTab(s: string | null): s is Tab {
@@ -53,6 +55,52 @@ const senderSchema = z.object({
   senderName: z.string(),
   senderAddress: z.string(),
 });
+
+const taxSchema = z.object({
+  taxNumber: z.string(),
+  vatId: z.string(),
+  isSmallBusiness: z.boolean(),
+  street: z.string(),
+  postalCode: z.string(),
+  city: z.string(),
+  country: z.string(),
+  iban: z
+    .string()
+    .refine(
+      (v) => v === "" || /^[A-Za-z]{2}[0-9]{2}[A-Za-z0-9 ]{10,34}$/.test(v.trim()),
+      { message: "iban" }
+    ),
+  bic: z.string(),
+  bankName: z.string(),
+});
+
+type TaxFormValues = z.infer<typeof taxSchema>;
+
+function taxDefaults(me?: {
+  taxNumber?: string | null;
+  vatId?: string | null;
+  isSmallBusiness?: boolean;
+  street?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  country?: string | null;
+  iban?: string | null;
+  bic?: string | null;
+  bankName?: string | null;
+}): TaxFormValues {
+  return {
+    taxNumber: me?.taxNumber ?? "",
+    vatId: me?.vatId ?? "",
+    isSmallBusiness: me?.isSmallBusiness ?? true,
+    street: me?.street ?? "",
+    postalCode: me?.postalCode ?? "",
+    city: me?.city ?? "",
+    country: me?.country ?? "",
+    iban: me?.iban ?? "",
+    bic: me?.bic ?? "",
+    bankName: me?.bankName ?? "",
+  };
+}
 
 // --- Tab: Profile ---
 
@@ -234,6 +282,178 @@ function SenderTab() {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+// --- Tab: Taxes & invoice data (Steuern & Rechnungsdaten) ---
+
+function TaxTab() {
+  const t = useTranslations("app.settings");
+  const { data: me, isLoading } = useMe();
+  const updateProfile = useUpdateProfile();
+
+  const {
+    register,
+    reset,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { isDirty, errors },
+  } = useForm<TaxFormValues>({
+    resolver: zodResolver(taxSchema),
+    defaultValues: taxDefaults(me ?? undefined),
+  });
+
+  useEffect(() => {
+    if (me) reset(taxDefaults(me));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, reset]);
+
+  const isSmallBusiness = watch("isSmallBusiness");
+  const complete = isTaxProfileComplete(me);
+
+  async function onSubmit(values: TaxFormValues) {
+    // "" clears a field on the backend; null would leave it unchanged
+    await updateProfile.mutateAsync({
+      taxNumber: values.taxNumber.trim(),
+      vatId: values.vatId.trim(),
+      isSmallBusiness: values.isSmallBusiness,
+      street: values.street.trim(),
+      postalCode: values.postalCode.trim(),
+      city: values.city.trim(),
+      country: values.country.trim(),
+      iban: values.iban.trim(),
+      bic: values.bic.trim(),
+      bankName: values.bankName.trim(),
+    });
+    reset(values);
+    toast.success(t("tax.saved"));
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-64 mt-1" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+          <Skeleton className="h-9 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {!complete && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+          {t("tax.incompleteHint")}
+        </div>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("tax.title")}</CardTitle>
+          <CardDescription>{t("tax.description")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="tax-number">{t("tax.taxNumber")}</Label>
+              <Input
+                id="tax-number"
+                {...register("taxNumber")}
+                placeholder="143/262/12345"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tax-vatid">{t("tax.vatId")}</Label>
+              <Input id="tax-vatid" {...register("vatId")} placeholder="DE123456789" />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">{t("tax.taxIdNote")}</p>
+
+          <div className="flex items-start justify-between gap-4 rounded-lg border p-4">
+            <div className="space-y-1">
+              <Label htmlFor="tax-small-business">{t("tax.smallBusiness")}</Label>
+              <p className="text-sm text-muted-foreground">
+                {isSmallBusiness
+                  ? t("tax.smallBusinessOn")
+                  : t("tax.smallBusinessOff")}
+              </p>
+            </div>
+            <Switch
+              id="tax-small-business"
+              checked={isSmallBusiness}
+              onCheckedChange={(checked) =>
+                setValue("isSmallBusiness", checked, { shouldDirty: true })
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("tax.addressTitle")}</CardTitle>
+          <CardDescription>{t("tax.addressDescription")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="tax-street">{t("tax.street")}</Label>
+            <Input id="tax-street" {...register("street")} placeholder="Musterstraße 42" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-[8rem_1fr]">
+            <div className="space-y-1.5">
+              <Label htmlFor="tax-zip">{t("tax.postalCode")}</Label>
+              <Input id="tax-zip" {...register("postalCode")} placeholder="80331" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tax-city">{t("tax.city")}</Label>
+              <Input id="tax-city" {...register("city")} placeholder="München" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tax-country">{t("tax.country")}</Label>
+            <Input id="tax-country" {...register("country")} placeholder="Deutschland" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("tax.bankTitle")}</CardTitle>
+          <CardDescription>{t("tax.bankDescription")}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="tax-iban">{t("tax.iban")}</Label>
+            <Input id="tax-iban" {...register("iban")} placeholder="DE89 3704 0044 0532 0130 00" />
+            {errors.iban && (
+              <p className="mt-1 text-xs text-destructive">{t("tax.errors.iban")}</p>
+            )}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="tax-bic">{t("tax.bic")}</Label>
+              <Input id="tax-bic" {...register("bic")} placeholder="COBADEFFXXX" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tax-bank">{t("tax.bankName")}</Label>
+              <Input id="tax-bank" {...register("bankName")} placeholder="Commerzbank" />
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="justify-end border-t bg-muted/30">
+          <Button type="submit" disabled={!isDirty || updateProfile.isPending}>
+            {updateProfile.isPending ? t("tax.saving") : t("tax.save")}
+          </Button>
+        </CardFooter>
+      </Card>
+    </form>
   );
 }
 
@@ -540,6 +760,7 @@ export function SettingsView() {
           <ProfileTab />
         )}
         {activeTab === "sender" && <SenderTab />}
+        {activeTab === "tax" && <TaxTab />}
         {activeTab === "security" && <SecurityTab />}
         {activeTab === "language" && <LanguageTab />}
       </div>

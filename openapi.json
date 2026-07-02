@@ -461,7 +461,7 @@
             "name": "status",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/InvoiceStatus"
+              "type": "string"
             }
           },
           {
@@ -500,6 +500,16 @@
                   "items": {
                     "$ref": "#/components/schemas/InvoiceResponse"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -631,6 +641,106 @@
         "responses": {
           "204": {
             "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/{id}/finalize": {
+      "post": {
+        "tags": [
+          "Invoices"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invoices/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Invoices"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceResponse"
+                }
+              }
+            }
           },
           "404": {
             "description": "Not Found",
@@ -831,6 +941,21 @@
             "format": "date",
             "nullable": true
           },
+          "serviceDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "servicePeriodStart": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "servicePeriodEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
           "lineItems": {
             "minItems": 1,
             "type": "array",
@@ -896,6 +1021,12 @@
           "status": {
             "$ref": "#/components/schemas/InvoiceStatus"
           },
+          "type": {
+            "$ref": "#/components/schemas/InvoiceType"
+          },
+          "isOverdue": {
+            "type": "boolean"
+          },
           "senderName": {
             "type": "string",
             "nullable": true
@@ -920,6 +1051,21 @@
             "type": "string",
             "format": "date"
           },
+          "serviceDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "servicePeriodStart": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "servicePeriodEnd": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
           "paidAt": {
             "type": "string",
             "format": "date",
@@ -932,6 +1078,9 @@
           "taxRate": {
             "type": "number",
             "format": "double"
+          },
+          "isSmallBusiness": {
+            "type": "boolean"
           },
           "subtotal": {
             "type": "number",
@@ -956,6 +1105,19 @@
             "type": "string",
             "nullable": true
           },
+          "cancellationOfId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "cancellationOfNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "cancelledByNumber": {
+            "type": "string",
+            "nullable": true
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -970,10 +1132,16 @@
       "InvoiceStatus": {
         "enum": [
           "Draft",
-          "Sent",
+          "Finalized",
           "Paid",
-          "Overdue",
           "Cancelled"
+        ],
+        "type": "string"
+      },
+      "InvoiceType": {
+        "enum": [
+          "Invoice",
+          "Cancellation"
         ],
         "type": "string"
       },
@@ -1032,7 +1200,7 @@
             "type": "number",
             "format": "double"
           },
-          "sent": {
+          "finalized": {
             "type": "number",
             "format": "double"
           }
@@ -1117,7 +1285,7 @@
             "type": "integer",
             "format": "int32"
           },
-          "sentCount": {
+          "finalizedCount": {
             "type": "integer",
             "format": "int32"
           },
@@ -1174,6 +1342,46 @@
           "defaultSenderAddress": {
             "type": "string",
             "nullable": true
+          },
+          "taxNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "vatId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isSmallBusiness": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "street": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "iban": {
+            "type": "string",
+            "nullable": true
+          },
+          "bic": {
+            "type": "string",
+            "nullable": true
+          },
+          "bankName": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1214,6 +1422,45 @@
             "nullable": true
           },
           "defaultSenderAddress": {
+            "type": "string",
+            "nullable": true
+          },
+          "taxNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "vatId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isSmallBusiness": {
+            "type": "boolean"
+          },
+          "street": {
+            "type": "string",
+            "nullable": true
+          },
+          "postalCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "country": {
+            "type": "string",
+            "nullable": true
+          },
+          "iban": {
+            "type": "string",
+            "nullable": true
+          },
+          "bic": {
+            "type": "string",
+            "nullable": true
+          },
+          "bankName": {
             "type": "string",
             "nullable": true
           }

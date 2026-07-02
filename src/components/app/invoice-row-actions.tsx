@@ -8,7 +8,8 @@ import {
   Eye,
   Download,
   CheckCircle,
-  Send,
+  FileCheck,
+  Ban,
   Trash2,
 } from "lucide-react";
 import {
@@ -33,6 +34,8 @@ import {
   useUpdateInvoiceStatus,
   useDeleteInvoice,
   useDownloadInvoicePdf,
+  useFinalizeInvoice,
+  useCancelInvoice,
 } from "@/lib/api/hooks/useInvoices";
 import type { components } from "@/lib/api/schema";
 import { toast } from "sonner";
@@ -50,16 +53,35 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
   const router = useRouter();
   const localePrefix = locale === "en" ? "" : `/${locale}`;
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [finalizeOpen, setFinalizeOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const updateStatus = useUpdateInvoiceStatus();
   const deleteInvoice = useDeleteInvoice();
   const downloadPdf = useDownloadInvoicePdf();
+  const finalizeInvoice = useFinalizeInvoice();
+  const cancelInvoice = useCancelInvoice();
 
   const status = (invoice.status ?? "Draft") as InvoiceStatus;
+  const isCancellation = invoice.type === "Cancellation";
   const id = invoice.id!;
 
-  function handleStatusChange(newStatus: InvoiceStatus) {
-    updateStatus.mutate({ id, status: newStatus });
+  function handleFinalize() {
+    finalizeInvoice.mutate(id, {
+      onSuccess: (finalized) =>
+        toast.success(
+          t("form.success.finalized", { number: finalized.number ?? "" })
+        ),
+    });
+    setFinalizeOpen(false);
+  }
+
+  function handleCancel() {
+    cancelInvoice.mutate(id, {
+      onSuccess: (storno) =>
+        toast.success(t("storno.success", { number: storno.number ?? "" })),
+    });
+    setCancelOpen(false);
   }
 
   function handleDelete() {
@@ -92,24 +114,37 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
-              downloadPdf.mutate({ id, number: invoice.number ?? id })
+              downloadPdf.mutate({ id, number: invoice.number })
             }
           >
             <Download className="mr-2 size-4" />
             {t("actions.downloadPdf")}
           </DropdownMenuItem>
 
-          {status === "Sent" && (
-            <DropdownMenuItem onClick={() => handleStatusChange("Paid")}>
+          {status === "Draft" && (
+            <DropdownMenuItem onClick={() => setFinalizeOpen(true)}>
+              <FileCheck className="mr-2 size-4" />
+              {t("actions.finalize")}
+            </DropdownMenuItem>
+          )}
+          {status === "Finalized" && !isCancellation && (
+            <DropdownMenuItem onClick={() => updateStatus.mutate({ id, status: "Paid" })}>
               <CheckCircle className="mr-2 size-4" />
               {t("actions.markAsPaid")}
             </DropdownMenuItem>
           )}
-          {status === "Draft" && (
-            <DropdownMenuItem onClick={() => handleStatusChange("Sent")}>
-              <Send className="mr-2 size-4" />
-              {t("actions.markAsSent")}
-            </DropdownMenuItem>
+
+          {status === "Finalized" && !isCancellation && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setCancelOpen(true)}
+                className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+              >
+                <Ban className="mr-2 size-4" />
+                {t("actions.storno")}
+              </DropdownMenuItem>
+            </>
           )}
 
           {status === "Draft" && (
@@ -126,6 +161,43 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("form.finalize.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("form.finalize.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("form.finalize.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleFinalize}>
+              {t("form.finalize.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("storno.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("storno.description", { number: invoice.number ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("storno.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600"
+            >
+              {t("storno.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

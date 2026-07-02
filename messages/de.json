@@ -249,7 +249,7 @@
     "searchPlaceholder": "Nach Nummer oder Empfänger suchen…",
     "status": {
       "Draft": "Entwurf",
-      "Sent": "Versendet",
+      "Finalized": "Offen",
       "Paid": "Bezahlt",
       "Overdue": "Überfällig",
       "Cancelled": "Storniert"
@@ -270,8 +270,10 @@
       "view": "Ansehen",
       "downloadPdf": "PDF herunterladen",
       "markAsPaid": "Als bezahlt markieren",
-      "markAsSent": "Als versendet markieren",
-      "delete": "Löschen"
+      "delete": "Löschen",
+      "finalize": "Festschreiben",
+      "storno": "Stornieren",
+      "markAsUnpaid": "Als unbezahlt markieren"
     },
     "delete": {
       "title": "Rechnung löschen",
@@ -301,7 +303,6 @@
     "detail": {
       "downloading": "Wird erstellt…",
       "edit": "Bearbeiten",
-      "markAsOverdue": "Als überfällig markieren",
       "invoiceTo": "Rechnung an",
       "invoiceNumber": "Rechnungs-Nr.",
       "date": "Datum",
@@ -320,8 +321,9 @@
       "timeline": {
         "title": "Verlauf",
         "created": "Erstellt",
-        "sent": "Versendet",
+        "finalized": "Festgeschrieben",
         "paid": "Bezahlt",
+        "cancelled": "Storniert",
         "notYet": "Noch nicht"
       },
       "metadata": {
@@ -337,7 +339,11 @@
       "notFoundDescription": "Diese Rechnung wurde möglicherweise gelöscht oder Sie haben keinen Zugriff.",
       "backToList": "Zurück zur Übersicht",
       "loadError": "Rechnung konnte nicht geladen werden",
-      "retry": "Erneut versuchen"
+      "retry": "Erneut versuchen",
+      "serviceDate": "Leistungsdatum",
+      "servicePeriod": "Leistungszeitraum",
+      "cancellationBadge": "Stornorechnung",
+      "smallBusinessNote": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet."
     },
     "form": {
       "newTitle": "Neue Rechnung",
@@ -358,12 +364,18 @@
         "recipientName": "Empfängername",
         "recipientAddress": "Empfängeradresse",
         "invoiceNumber": "Rechnungsnummer",
-        "invoiceNumberAuto": "Wird beim Speichern vergeben",
+        "invoiceNumberAuto": "Wird bei Festschreibung vergeben",
         "issueDate": "Rechnungsdatum",
         "dueDate": "Fälligkeitsdatum",
         "currency": "Währung",
         "taxRate": "Steuersatz",
-        "notes": "Hinweise (optional)"
+        "notes": "Hinweise (optional)",
+        "servicePerformed": "Leistungsdatum / -zeitraum",
+        "serviceModeDate": "Leistungsdatum",
+        "serviceModePeriod": "Leistungszeitraum",
+        "serviceDate": "Leistungsdatum",
+        "servicePeriodStart": "Zeitraum von",
+        "servicePeriodEnd": "Zeitraum bis"
       },
       "lineItem": {
         "description": "Beschreibung",
@@ -393,11 +405,9 @@
       "actions": {
         "cancel": "Abbrechen",
         "saveAsDraft": "Als Entwurf speichern",
-        "createAndSend": "Erstellen & Senden",
         "saveChanges": "Änderungen speichern",
-        "saveAndSend": "Speichern & Senden",
         "saving": "Wird gespeichert…",
-        "sending": "Wird gesendet…"
+        "saveAndFinalize": "Speichern & festschreiben"
       },
       "discard": {
         "title": "Änderungen verwerfen?",
@@ -410,14 +420,35 @@
         "positiveRequired": "Muss größer als 0 sein",
         "atLeastOneItem": "Mindestens eine Position erforderlich",
         "loadFailed": "Rechnung konnte nicht geladen werden",
-        "notDraft": "Nur Entwürfe können bearbeitet werden"
+        "notDraft": "Nur Entwürfe können bearbeitet werden",
+        "periodEndBeforeStart": "Darf nicht vor dem Beginn liegen"
       },
       "success": {
         "created": "Rechnung erstellt",
         "updated": "Rechnung gespeichert",
-        "createdAndSent": "Rechnung erstellt und versendet",
-        "updatedAndSent": "Rechnung gespeichert und versendet"
-      }
+        "finalized": "Rechnung {number} festgeschrieben"
+      },
+      "finalize": {
+        "title": "Rechnung festschreiben?",
+        "description": "Die Rechnung erhält ihre fortlaufende Rechnungsnummer und kann danach nicht mehr geändert werden. Korrekturen sind nur per Stornorechnung möglich.",
+        "cancel": "Abbrechen",
+        "confirm": "Festschreiben",
+        "profileIncomplete": "Zum Festschreiben werden deine Steuerdaten benötigt (Adresse sowie Steuernummer oder USt-IdNr.).",
+        "goToSettings": "Einstellungen vervollständigen"
+      },
+      "smallBusinessHint": "Gemäß § 19 UStG wird keine Umsatzsteuer berechnet (Kleinunternehmerregelung).",
+      "smallBusinessTaxNote": "0 % — Kleinunternehmer nach § 19 UStG"
+    },
+    "draftNumber": "Entwurf",
+    "storno": {
+      "title": "Rechnung stornieren?",
+      "description": "Es wird eine Stornorechnung mit negativen Beträgen zu {number} erstellt und das Original als storniert markiert. Dies kann nicht rückgängig gemacht werden.",
+      "cancel": "Rechnung behalten",
+      "confirm": "Stornorechnung erstellen",
+      "success": "Stornorechnung {number} erstellt",
+      "referencesOriginal": "Diese Stornorechnung storniert die Rechnung {number}.",
+      "viewOriginal": "Original ansehen",
+      "cancelledBy": "Diese Rechnung wurde durch Stornorechnung {number} storniert."
     }
   },
   "app": {
@@ -448,6 +479,7 @@
       "tabs": {
         "profile": "Profil",
         "sender": "Absenderdaten",
+        "tax": "Steuern & Rechnungsdaten",
         "security": "Sicherheit",
         "language": "Sprache"
       },
@@ -509,7 +541,35 @@
         "cancel": "Abbrechen",
         "error": "Konto konnte nicht gelöscht werden."
       },
-      "comingSoon": "Demnächst verfügbar"
+      "comingSoon": "Demnächst verfügbar",
+      "tax": {
+        "title": "Steuerangaben",
+        "description": "Erscheinen auf jeder festgeschriebenen Rechnung (§ 14 UStG).",
+        "taxNumber": "Steuernummer",
+        "vatId": "USt-IdNr.",
+        "taxIdNote": "Mindestens eine der beiden Angaben ist erforderlich, um Rechnungen festzuschreiben.",
+        "smallBusiness": "Kleinunternehmer (§ 19 UStG)",
+        "smallBusinessOn": "Rechnungen weisen keine Umsatzsteuer aus und enthalten den Hinweis nach § 19 UStG.",
+        "smallBusinessOff": "Rechnungen weisen Umsatzsteuer aus (19 / 7 / 0 %).",
+        "addressTitle": "Geschäftsadresse",
+        "addressDescription": "Pflichtangabe als Absenderadresse auf Rechnungen.",
+        "street": "Straße und Hausnummer",
+        "postalCode": "PLZ",
+        "city": "Ort",
+        "country": "Land",
+        "bankTitle": "Bankverbindung",
+        "bankDescription": "Erscheint in der Fußzeile der Rechnung.",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bankName": "Bank",
+        "save": "Speichern",
+        "saving": "Wird gespeichert…",
+        "saved": "Steuerdaten gespeichert",
+        "incompleteHint": "Steuerdaten unvollständig — Rechnungen können noch nicht festgeschrieben werden.",
+        "errors": {
+          "iban": "Ungültiges IBAN-Format"
+        }
+      }
     }
   }
 }

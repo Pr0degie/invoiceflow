@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -26,8 +26,10 @@ import {
   useInvoice,
   useCreateInvoice,
   useUpdateInvoice,
-  useUpdateInvoiceStatus,
+  useFinalizeInvoice,
 } from "@/lib/api/hooks/useInvoices";
+import { useMe } from "@/lib/api/hooks/useMe";
+import { isTaxProfileComplete } from "@/lib/tax-profile";
 import { useFormatCurrency } from "@/lib/i18n/formatters";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -72,6 +74,10 @@ function getCreateDefaults(d?: { senderName?: string; senderAddress?: string }):
     recipientAddress: "",
     issueDate: TODAY,
     dueDate: IN_14,
+    serviceMode: "date",
+    serviceDate: TODAY,
+    servicePeriodStart: "",
+    servicePeriodEnd: "",
     currency: "EUR",
     taxRate: 0.19,
     notes: "",
@@ -87,6 +93,10 @@ function mapInvoiceToForm(invoice: Invoice): InvoiceFormValues {
     recipientAddress: invoice.recipientAddress ?? "",
     issueDate: invoice.issueDate ?? TODAY,
     dueDate: invoice.dueDate ?? IN_14,
+    serviceMode: invoice.servicePeriodStart ? "period" : "date",
+    serviceDate: invoice.serviceDate ?? (invoice.servicePeriodStart ? "" : TODAY),
+    servicePeriodStart: invoice.servicePeriodStart ?? "",
+    servicePeriodEnd: invoice.servicePeriodEnd ?? "",
     currency:
       (invoice.currency as InvoiceFormValues["currency"]) ?? "EUR",
     taxRate: invoice.taxRate ?? 0.19,
@@ -100,7 +110,7 @@ function mapInvoiceToForm(invoice: Invoice): InvoiceFormValues {
   };
 }
 
-function mapFormToApi(values: InvoiceFormValues) {
+function mapFormToApi(values: InvoiceFormValues, isSmallBusiness: boolean) {
   return {
     senderName: values.senderName,
     senderAddress: values.senderAddress,
@@ -108,8 +118,14 @@ function mapFormToApi(values: InvoiceFormValues) {
     recipientAddress: values.recipientAddress,
     issueDate: values.issueDate || null,
     dueDate: values.dueDate || null,
+    serviceDate: values.serviceMode === "date" ? values.serviceDate || null : null,
+    servicePeriodStart:
+      values.serviceMode === "period" ? values.servicePeriodStart || null : null,
+    servicePeriodEnd:
+      values.serviceMode === "period" ? values.servicePeriodEnd || null : null,
     currency: values.currency,
-    taxRate: Number(values.taxRate),
+    // § 19 UStG: Kleinunternehmer invoices never carry VAT
+    taxRate: isSmallBusiness ? 0 : Number(values.taxRate),
     notes: values.notes || null,
     lineItems: values.lineItems.map((item) => ({
       description: item.description,
@@ -188,12 +204,19 @@ function InvoiceForm(props: Props) {
 
   const createInvoice = useCreateInvoice();
   const updateInvoice = useUpdateInvoice();
-  const updateStatus = useUpdateInvoiceStatus();
+  const finalizeInvoice = useFinalizeInvoice();
+
+  const { data: me } = useMe();
+  const isSmallBusiness = me?.isSmallBusiness ?? false;
+  const profileComplete = isTaxProfileComplete(me);
+
+  // Values validated by "Save & finalize" and awaiting dialog confirmation
+  const [pendingFinalize, setPendingFinalize] = useState<InvoiceFormValues | null>(null);
 
   const isSubmitting =
     createInvoice.isPending ||
     updateInvoice.isPending ||
-    updateStatus.isPending;
+    finalizeInvoice.isPending;
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceFormSchema),
@@ -218,10 +241,11 @@ function InvoiceForm(props: Props) {
   // Live totals
   const watchedItems = useWatch({ control, name: "lineItems" });
   const watchedTaxRate = useWatch({ control, name: "taxRate" });
+  const serviceMode = useWatch({ control, name: "serviceMode" });
   const subtotal = (watchedItems ?? []).reduce((sum, item) => {
     return sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
   }, 0);
-  const taxAmount = subtotal * (Number(watchedTaxRate) || 0);
+  const taxAmount = isSmallBusiness ? 0 : subtotal * (Number(watchedTaxRate) || 0);
   const total = subtotal + taxAmount;
 
   // Unsaved changes warning on tab close
@@ -251,8 +275,8 @@ function InvoiceForm(props: Props) {
 
 
   const onSubmit = useCallback(
-    async (values: InvoiceFormValues, intent: "draft" | "send") => {
-      const apiData = mapFormToApi(values);
+    async (values: InvoiceFormValues, intent: "draft" | "finalize") => {
+      const apiData = mapFormToApi(values, isSmallBusiness);
 
       try {
         let created: Invoice;
@@ -266,16 +290,9 @@ function InvoiceForm(props: Props) {
           });
         }
 
-        if (intent === "send") {
-          await updateStatus.mutateAsync({
-            id: created.id!,
-            status: "Sent",
-          });
-          toast.success(
-            mode === "create"
-              ? tf("success.createdAndSent")
-              : tf("success.updatedAndSent")
-          );
+        if (intent === "finalize") {
+          const finalized = await finalizeInvoice.mutateAsync(created.id!);
+          toast.success(tf("success.finalized", { number: finalized.number ?? "" }));
         } else {
           toast.success(
             mode === "create" ? tf("success.created") : tf("success.updated")
@@ -288,7 +305,7 @@ function InvoiceForm(props: Props) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mode, invoice, createInvoice, updateInvoice, updateStatus, router, localePrefix, tf]
+    [mode, invoice, isSmallBusiness, createInvoice, updateInvoice, finalizeInvoice, router, localePrefix, tf]
   );
 
 
@@ -356,19 +373,55 @@ function InvoiceForm(props: Props) {
                 : tf("actions.saveChanges")}
             </Button>
             <Button
-              disabled={isSubmitting}
-              onClick={handleSubmit((v) => onSubmit(v, "send"))}
+              disabled={isSubmitting || !profileComplete}
+              onClick={handleSubmit((v) => setPendingFinalize(v))}
             >
-              {updateStatus.isPending ? (
+              {finalizeInvoice.isPending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : null}
-              {mode === "create"
-                ? tf("actions.createAndSend")
-                : tf("actions.saveAndSend")}
+              {tf("actions.saveAndFinalize")}
             </Button>
           </div>
         </div>
+        {!profileComplete && (
+          <div className="mx-auto mt-2 max-w-4xl text-xs text-amber-700 dark:text-amber-400">
+            {tf("finalize.profileIncomplete")}{" "}
+            <Link
+              href={`${localePrefix}/app/settings?tab=tax`}
+              className="font-medium underline underline-offset-2"
+            >
+              {tf("finalize.goToSettings")}
+            </Link>
+          </div>
+        )}
       </div>
+
+      {/* Finalize confirmation — after this the invoice is immutable */}
+      <AlertDialog
+        open={!!pendingFinalize}
+        onOpenChange={(open) => !open && setPendingFinalize(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tf("finalize.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {tf("finalize.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tf("finalize.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const values = pendingFinalize;
+                setPendingFinalize(null);
+                if (values) onSubmit(values, "finalize");
+              }}
+            >
+              {tf("finalize.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Form body */}
       <form
@@ -488,28 +541,36 @@ function InvoiceForm(props: Props) {
               />
             </FieldWrapper>
 
-            {/* Tax rate */}
-            <FieldWrapper label={tf("fields.taxRate")}>
-              <Select
-                defaultValue={String(
-                  mode === "edit" ? (invoice?.taxRate ?? 0.19) : 0.19
-                )}
-                onValueChange={(v) =>
-                  setValue("taxRate", Number(v), { shouldDirty: true })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TAX_RATE_OPTIONS.map((r) => (
-                    <SelectItem key={r} value={String(r)}>
-                      {tf(`taxRates.${(r * 100).toFixed(0)}` as Parameters<typeof tf>[0])}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FieldWrapper>
+            {/* Tax rate — hidden for Kleinunternehmer (§ 19 UStG: always 0%) */}
+            {isSmallBusiness ? (
+              <FieldWrapper label={tf("fields.taxRate")}>
+                <div className="flex min-h-9 items-center rounded-md border border-dashed px-3 text-sm text-muted-foreground">
+                  {tf("smallBusinessTaxNote")}
+                </div>
+              </FieldWrapper>
+            ) : (
+              <FieldWrapper label={tf("fields.taxRate")}>
+                <Select
+                  defaultValue={String(
+                    mode === "edit" ? (invoice?.taxRate ?? 0.19) : 0.19
+                  )}
+                  onValueChange={(v) =>
+                    setValue("taxRate", Number(v), { shouldDirty: true })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TAX_RATE_OPTIONS.map((r) => (
+                      <SelectItem key={r} value={String(r)}>
+                        {tf(`taxRates.${(r * 100).toFixed(0)}` as Parameters<typeof tf>[0])}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FieldWrapper>
+            )}
 
             {/* Due date */}
             <FieldWrapper
@@ -543,6 +604,74 @@ function InvoiceForm(props: Props) {
                 ))}
               </div>
             </FieldWrapper>
+          </div>
+
+          {/* Leistungsdatum / Leistungszeitraum — Pflichtangabe (§ 14 Abs. 4 UStG) */}
+          <div className="space-y-2 rounded-lg border p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label className="text-sm">{tf("fields.servicePerformed")}</Label>
+              <div className="inline-flex rounded-md border p-0.5">
+                {(["date", "period"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() =>
+                      setValue("serviceMode", m, { shouldDirty: true })
+                    }
+                    className={cn(
+                      "rounded px-3 py-1 text-xs font-medium transition-colors",
+                      serviceMode === m
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {m === "date"
+                      ? tf("fields.serviceModeDate")
+                      : tf("fields.serviceModePeriod")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {serviceMode === "date" ? (
+              <FieldWrapper
+                label={tf("fields.serviceDate")}
+                error={errors.serviceDate?.message}
+              >
+                <Input
+                  type="date"
+                  {...register("serviceDate")}
+                  aria-invalid={!!errors.serviceDate}
+                />
+              </FieldWrapper>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FieldWrapper
+                  label={tf("fields.servicePeriodStart")}
+                  error={errors.servicePeriodStart?.message}
+                >
+                  <Input
+                    type="date"
+                    {...register("servicePeriodStart")}
+                    aria-invalid={!!errors.servicePeriodStart}
+                  />
+                </FieldWrapper>
+                <FieldWrapper
+                  label={tf("fields.servicePeriodEnd")}
+                  error={
+                    errors.servicePeriodEnd?.message === "beforeStart"
+                      ? tf("errors.periodEndBeforeStart")
+                      : errors.servicePeriodEnd?.message
+                  }
+                >
+                  <Input
+                    type="date"
+                    {...register("servicePeriodEnd")}
+                    aria-invalid={!!errors.servicePeriodEnd}
+                  />
+                </FieldWrapper>
+              </div>
+            )}
           </div>
         </FormSection>
 
@@ -730,23 +859,32 @@ function InvoiceForm(props: Props) {
         {/* Totals */}
         <FormSection title={tf("sections.totals")}>
           <div className="ml-auto w-full max-w-xs space-y-2 text-sm">
-            <div className="flex justify-between text-muted-foreground">
-              <span>{t("detail.subtotal")}</span>
-              <span className="tabular-nums">{formatCurrency(subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>
-                {t("detail.vat", {
-                  rate: ((Number(watchedTaxRate) || 0) * 100).toFixed(0),
-                })}
-              </span>
-              <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
-            </div>
-            <Separator />
+            {!isSmallBusiness && (
+              <>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("detail.subtotal")}</span>
+                  <span className="tabular-nums">{formatCurrency(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>
+                    {t("detail.vat", {
+                      rate: ((Number(watchedTaxRate) || 0) * 100).toFixed(0),
+                    })}
+                  </span>
+                  <span className="tabular-nums">{formatCurrency(taxAmount)}</span>
+                </div>
+                <Separator />
+              </>
+            )}
             <div className="flex justify-between font-semibold">
               <span>{t("detail.total")}</span>
               <span className="tabular-nums">{formatCurrency(total)}</span>
             </div>
+            {isSmallBusiness && (
+              <p className="text-xs text-muted-foreground">
+                {tf("smallBusinessHint")}
+              </p>
+            )}
           </div>
         </FormSection>
 

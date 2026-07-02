@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useTranslations, useLocale, useFormatter } from "next-intl";
 import Link from "next/link";
-import { formatDistanceToNow, isBefore } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import {
   Search,
@@ -15,7 +15,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useInvoices } from "@/lib/api/hooks/useInvoices";
-import type { components } from "@/lib/api/schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,13 +42,17 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useFormatCurrency } from "@/lib/i18n/formatters";
-import { StatusIndicator, STATUS_COLORS } from "./status-indicator";
+import {
+  StatusIndicator,
+  STATUS_COLORS,
+  getDisplayStatus,
+  type DisplayStatus,
+} from "./status-indicator";
 import { InvoiceRowActions } from "./invoice-row-actions";
 
-type InvoiceStatus = components["schemas"]["InvoiceStatus"];
-
 const PAGE_SIZE = 25;
-const STATUSES: InvoiceStatus[] = ["Draft", "Sent", "Paid", "Overdue", "Cancelled"];
+// "Overdue" is a virtual filter (Finalized past due date), resolved server-side
+const STATUSES: DisplayStatus[] = ["Draft", "Finalized", "Paid", "Overdue", "Cancelled"];
 
 export function InvoiceListView() {
   const searchParams = useSearchParams();
@@ -124,22 +127,18 @@ export function InvoiceListView() {
     });
   }
 
-  function dueDateInfo(dueDate?: string | null, status?: InvoiceStatus | null) {
+  function dueDateInfo(dueDate?: string | null, isOverdue?: boolean) {
     if (!dueDate) return { label: "—", overdue: false };
-    const date = new Date(dueDate);
-    const past = isBefore(date, new Date());
-    const overdue =
-      status === "Overdue" ||
-      (past && status !== "Paid" && status !== "Cancelled");
-    const label = formatDistanceToNow(date, {
+    const label = formatDistanceToNow(new Date(dueDate), {
       addSuffix: true,
       locale: dateFnsLocale,
     });
-    return { label, overdue };
+    // Overdue is server-derived (Finalized + past due) — drafts never count
+    return { label, overdue: !!isOverdue };
   }
 
-  const statusFilter = STATUSES.includes(statusParam as InvoiceStatus)
-    ? (statusParam as InvoiceStatus)
+  const statusFilter = STATUSES.includes(statusParam as DisplayStatus)
+    ? (statusParam as DisplayStatus)
     : undefined;
 
   const {
@@ -320,7 +319,8 @@ export function InvoiceListView() {
                 </TableHeader>
                 <TableBody>
                   {paginated.map((inv) => {
-                    const due = dueDateInfo(inv.dueDate, inv.status);
+                    const due = dueDateInfo(inv.dueDate, inv.isOverdue);
+                    const displayStatus = getDisplayStatus(inv);
                     return (
                       <TableRow
                         key={inv.id}
@@ -331,8 +331,13 @@ export function InvoiceListView() {
                           )
                         }
                       >
-                        <TableCell className="px-4 py-3 font-mono text-sm tabular-nums">
-                          {inv.number ?? "—"}
+                        <TableCell
+                          className={cn(
+                            "px-4 py-3 font-mono text-sm tabular-nums",
+                            !inv.number && "italic text-muted-foreground"
+                          )}
+                        >
+                          {inv.number ?? t("draftNumber")}
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate px-4 py-3 text-sm">
                           {inv.recipientName ?? "—"}
@@ -364,8 +369,8 @@ export function InvoiceListView() {
                         </TableCell>
                         <TableCell className="px-4 py-3 text-sm">
                           <StatusIndicator
-                            status={(inv.status ?? "Draft") as InvoiceStatus}
-                            label={t(`status.${inv.status ?? "Draft"}`)}
+                            status={displayStatus}
+                            label={t(`status.${displayStatus}`)}
                           />
                         </TableCell>
                         <TableCell
@@ -384,8 +389,8 @@ export function InvoiceListView() {
             {/* Mobile cards */}
             <div className="space-y-2 md:hidden">
               {paginated.map((inv) => {
-                const due = dueDateInfo(inv.dueDate, inv.status);
-                const status = (inv.status ?? "Draft") as InvoiceStatus;
+                const due = dueDateInfo(inv.dueDate, inv.isOverdue);
+                const displayStatus = getDisplayStatus(inv);
                 return (
                   <Link
                     key={inv.id}
@@ -395,13 +400,18 @@ export function InvoiceListView() {
                     <span
                       className={cn(
                         "size-2 shrink-0 rounded-full",
-                        STATUS_COLORS[status]
+                        STATUS_COLORS[displayStatus]
                       )}
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
-                        <p className="truncate font-mono text-sm font-medium tabular-nums">
-                          {inv.number ?? "—"}
+                        <p
+                          className={cn(
+                            "truncate font-mono text-sm font-medium tabular-nums",
+                            !inv.number && "italic text-muted-foreground"
+                          )}
+                        >
+                          {inv.number ?? t("draftNumber")}
                         </p>
                         <p className="shrink-0 text-sm tabular-nums">
                           {formatCurrency(inv.total ?? 0)}

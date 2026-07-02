@@ -1,5 +1,6 @@
 export interface InvoiceListFilters {
-  status?: "Draft" | "Sent" | "Paid" | "Overdue" | "Cancelled";
+  // "Overdue" is a virtual filter (Finalized past due date), not a stored status
+  status?: "Draft" | "Finalized" | "Paid" | "Overdue" | "Cancelled";
   search?: string;
   from?: string;
   to?: string;

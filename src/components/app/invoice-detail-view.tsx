@@ -8,13 +8,14 @@ import {
   Download,
   Loader2,
   MoreHorizontal,
-  Send,
   CheckCircle,
   AlertCircle,
+  Ban,
+  FileCheck,
   Pencil,
   Trash2,
   ChevronRight,
-  Clock,
+  RotateCcw,
   FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,13 +48,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { StatusIndicator } from "./status-indicator";
+import { StatusIndicator, getDisplayStatus } from "./status-indicator";
 import {
   useInvoice,
   useUpdateInvoiceStatus,
   useDeleteInvoice,
   useDownloadInvoicePdf,
+  useFinalizeInvoice,
+  useCancelInvoice,
 } from "@/lib/api/hooks/useInvoices";
+import { useMe } from "@/lib/api/hooks/useMe";
+import { isTaxProfileComplete } from "@/lib/tax-profile";
 import { useFormatCurrency, useFormatDate } from "@/lib/i18n/formatters";
 import { ApiError } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
@@ -72,11 +77,16 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const formatDate = useFormatDate();
 
   const { data: invoice, isLoading, error, refetch } = useInvoice(id);
+  const { data: me } = useMe();
   const updateStatus = useUpdateInvoiceStatus();
   const deleteInvoice = useDeleteInvoice();
   const downloadPdf = useDownloadInvoicePdf();
+  const finalizeInvoice = useFinalizeInvoice();
+  const cancelInvoice = useCancelInvoice();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [finalizeOpen, setFinalizeOpen] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -107,17 +117,44 @@ export function InvoiceDetailView({ id }: { id: string }) {
   if (!invoice) return <NotFoundState t={t} localePrefix={localePrefix} />;
 
   const status = (invoice.status ?? "Draft") as InvoiceStatus;
+  const displayStatus = getDisplayStatus(invoice);
+  const isCancellation = invoice.type === "Cancellation";
   const invoiceId = invoice.id!;
   const subtotal = invoice.subtotal ?? 0;
   const taxAmount = invoice.taxAmount ?? 0;
   const total = invoice.total ?? 0;
   const taxRate = invoice.taxRate ?? 0;
+  const numberLabel = invoice.number ?? t("draftNumber");
+  // § 19: finalized invoices carry the snapshot; drafts preview the setting
+  const smallBusiness =
+    invoice.isSmallBusiness || (status === "Draft" && !!me?.isSmallBusiness);
+  const profileComplete = isTaxProfileComplete(me);
 
   function handleStatusChange(newStatus: InvoiceStatus) {
     updateStatus.mutate(
       { id: invoiceId, status: newStatus },
       { onSuccess: () => toast.success(t("detail.statusSuccess")) }
     );
+  }
+
+  function handleFinalize() {
+    finalizeInvoice.mutate(invoiceId, {
+      onSuccess: (finalized) =>
+        toast.success(
+          t("form.success.finalized", { number: finalized.number ?? "" })
+        ),
+    });
+    setFinalizeOpen(false);
+  }
+
+  function handleCancelInvoice() {
+    cancelInvoice.mutate(invoiceId, {
+      onSuccess: (storno) => {
+        toast.success(t("storno.success", { number: storno.number ?? "" }));
+        router.push(`${localePrefix}/app/invoices/${storno.id}`);
+      },
+    });
+    setCancelOpen(false);
   }
 
   function handleDelete() {
@@ -145,7 +182,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         </Link>
         <ChevronRight className="size-3.5 shrink-0" />
         <span className="font-mono text-foreground">
-          {invoice.number ?? "—"}
+          {numberLabel}
         </span>
       </nav>
 
@@ -153,9 +190,19 @@ export function InvoiceDetailView({ id }: { id: string }) {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between print:hidden">
         <div className="space-y-1.5">
           <h1 className="font-mono text-2xl font-semibold tracking-tight tabular-nums">
-            {invoice.number ?? "—"}
+            {numberLabel}
           </h1>
-          <StatusIndicator status={status} label={t(`status.${status}`)} />
+          <div className="flex flex-wrap items-center gap-3">
+            <StatusIndicator
+              status={displayStatus}
+              label={t(`status.${displayStatus}`)}
+            />
+            {isCancellation && (
+              <span className="rounded border px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                {t("detail.cancellationBadge")}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -165,7 +212,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
             onClick={() =>
               downloadPdf.mutate({
                 id: invoiceId,
-                number: invoice.number ?? invoiceId,
+                number: invoice.number,
               })
             }
             disabled={downloadPdf.isPending}
@@ -180,19 +227,23 @@ export function InvoiceDetailView({ id }: { id: string }) {
               : t("actions.downloadPdf")}
           </Button>
 
-          {/* Draft: mark as sent */}
+          {/* Draft: finalize (assigns the number, freezes the invoice) */}
           {status === "Draft" && (
             <Button
-              onClick={() => handleStatusChange("Sent")}
-              disabled={updateStatus.isPending}
+              onClick={() => setFinalizeOpen(true)}
+              disabled={finalizeInvoice.isPending || !profileComplete}
             >
-              <Send className="mr-2 size-4" />
-              {t("actions.markAsSent")}
+              {finalizeInvoice.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <FileCheck className="mr-2 size-4" />
+              )}
+              {t("actions.finalize")}
             </Button>
           )}
 
-          {/* Sent / Overdue: mark as paid */}
-          {(status === "Sent" || status === "Overdue") && (
+          {/* Finalized (incl. derived overdue): mark as paid */}
+          {status === "Finalized" && !isCancellation && (
             <Button
               className="bg-emerald-600 text-white hover:bg-emerald-700"
               onClick={() => handleStatusChange("Paid")}
@@ -203,15 +254,32 @@ export function InvoiceDetailView({ id }: { id: string }) {
             </Button>
           )}
 
-          {/* Sent: manual overdue force */}
-          {status === "Sent" && (
+          {/* Finalized: Storno */}
+          {status === "Finalized" && !isCancellation && (
             <Button
               variant="outline"
-              onClick={() => handleStatusChange("Overdue")}
+              className="text-red-600 hover:text-red-600 dark:text-red-400"
+              onClick={() => setCancelOpen(true)}
+              disabled={cancelInvoice.isPending}
+            >
+              {cancelInvoice.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Ban className="mr-2 size-4" />
+              )}
+              {t("actions.storno")}
+            </Button>
+          )}
+
+          {/* Paid: undo path back to Finalized */}
+          {status === "Paid" && (
+            <Button
+              variant="outline"
+              onClick={() => handleStatusChange("Finalized")}
               disabled={updateStatus.isPending}
             >
-              <Clock className="mr-2 size-4" />
-              {t("detail.markAsOverdue")}
+              <RotateCcw className="mr-2 size-4" />
+              {t("actions.markAsUnpaid")}
             </Button>
           )}
 
@@ -247,6 +315,41 @@ export function InvoiceDetailView({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* Draft + incomplete tax profile: finalize blocked, link to settings */}
+      {status === "Draft" && !profileComplete && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400 print:hidden">
+          {t("form.finalize.profileIncomplete")}{" "}
+          <Link
+            href={`${localePrefix}/app/settings?tab=tax`}
+            className="font-medium underline underline-offset-2"
+          >
+            {t("form.finalize.goToSettings")}
+          </Link>
+        </div>
+      )}
+
+      {/* Cancellation ↔ original cross-references */}
+      {isCancellation && invoice.cancellationOfNumber && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm print:hidden">
+          {t("storno.referencesOriginal", {
+            number: invoice.cancellationOfNumber,
+          })}{" "}
+          {invoice.cancellationOfId && (
+            <Link
+              href={`${localePrefix}/app/invoices/${invoice.cancellationOfId}`}
+              className="font-medium underline underline-offset-2"
+            >
+              {t("storno.viewOriginal")}
+            </Link>
+          )}
+        </div>
+      )}
+      {status === "Cancelled" && invoice.cancelledByNumber && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm print:hidden">
+          {t("storno.cancelledBy", { number: invoice.cancelledByNumber })}
+        </div>
+      )}
+
       {/* Main two-column layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Invoice preview — left 2 cols */}
@@ -277,7 +380,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
                     {t("detail.invoiceNumber")}{" "}
                   </span>
                   <span className="font-mono tabular-nums">
-                    {invoice.number ?? "—"}
+                    {numberLabel}
                   </span>
                 </div>
                 <div>
@@ -288,6 +391,25 @@ export function InvoiceDetailView({ id }: { id: string }) {
                     {invoice.issueDate ? formatDate(invoice.issueDate) : "—"}
                   </span>
                 </div>
+                {invoice.serviceDate && (
+                  <div>
+                    <span className="text-muted-foreground">
+                      {t("detail.serviceDate")}{" "}
+                    </span>
+                    <span>{formatDate(invoice.serviceDate)}</span>
+                  </div>
+                )}
+                {invoice.servicePeriodStart && invoice.servicePeriodEnd && (
+                  <div>
+                    <span className="text-muted-foreground">
+                      {t("detail.servicePeriod")}{" "}
+                    </span>
+                    <span>
+                      {formatDate(invoice.servicePeriodStart)} –{" "}
+                      {formatDate(invoice.servicePeriodEnd)}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <span className="text-muted-foreground">
                     {t("detail.dueDate")}{" "}
@@ -352,31 +474,40 @@ export function InvoiceDetailView({ id }: { id: string }) {
             </Table>
             </div>
 
-            {/* Totals */}
+            {/* Totals — § 19 UStG: no VAT line for Kleinunternehmer */}
             <div className="mt-6 ml-auto w-full max-w-xs space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {t("detail.subtotal")}
-                </span>
-                <span className="tabular-nums">
-                  {formatCurrency(subtotal)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {t("detail.vat", {
-                    rate: (taxRate * 100).toFixed(0),
-                  })}
-                </span>
-                <span className="tabular-nums">
-                  {formatCurrency(taxAmount)}
-                </span>
-              </div>
-              <Separator />
+              {!smallBusiness && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {t("detail.subtotal")}
+                    </span>
+                    <span className="tabular-nums">
+                      {formatCurrency(subtotal)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {t("detail.vat", {
+                        rate: (taxRate * 100).toFixed(0),
+                      })}
+                    </span>
+                    <span className="tabular-nums">
+                      {formatCurrency(taxAmount)}
+                    </span>
+                  </div>
+                  <Separator />
+                </>
+              )}
               <div className="flex justify-between text-base font-semibold">
                 <span>{t("detail.total")}</span>
                 <span className="tabular-nums">{formatCurrency(total)}</span>
               </div>
+              {smallBusiness && (
+                <p className="text-xs text-muted-foreground">
+                  {t("detail.smallBusinessNote")}
+                </p>
+              )}
             </div>
 
             {/* Notes */}
@@ -447,6 +578,45 @@ export function InvoiceDetailView({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* Finalize confirmation — after this the invoice is immutable */}
+      <AlertDialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("form.finalize.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("form.finalize.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("form.finalize.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleFinalize}>
+              {t("form.finalize.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Storno confirmation */}
+      <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("storno.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("storno.description", { number: invoice.number ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("storno.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelInvoice}
+              className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600"
+            >
+              {t("storno.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
@@ -454,7 +624,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
             <AlertDialogTitle>{t("detail.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("detail.deleteDescription", {
-                number: invoice.number ?? "",
+                number: numberLabel,
               })}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -486,8 +656,9 @@ function StatusTimeline({
   t: ReturnType<typeof useTranslations<"invoices">>;
   format: ReturnType<typeof useFormatter>;
 }) {
-  const isSent = ["Sent", "Paid", "Overdue"].includes(status);
+  const isFinalized = status !== "Draft";
   const isPaid = status === "Paid";
+  const isCancelled = status === "Cancelled";
 
   const allSteps = [
     {
@@ -497,17 +668,24 @@ function StatusTimeline({
       timestamp: invoice.createdAt ?? null,
     },
     {
-      key: "sent",
-      label: t("detail.timeline.sent"),
-      done: isSent,
-      timestamp: null, // API has no sentAt field
+      key: "finalized",
+      label: t("detail.timeline.finalized"),
+      done: isFinalized,
+      timestamp: null, // API has no finalizedAt field
     },
-    {
-      key: "paid",
-      label: t("detail.timeline.paid"),
-      done: isPaid,
-      timestamp: invoice.paidAt ?? null,
-    },
+    isCancelled
+      ? {
+          key: "cancelled",
+          label: t("detail.timeline.cancelled"),
+          done: true,
+          timestamp: null,
+        }
+      : {
+          key: "paid",
+          label: t("detail.timeline.paid"),
+          done: isPaid,
+          timestamp: invoice.paidAt ?? null,
+        },
   ];
 
   // Draft: only show Created step

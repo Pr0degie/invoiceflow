@@ -13,18 +13,10 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useFormatCurrency, useFormatRelative } from "@/lib/i18n/formatters";
+import { STATUS_COLORS, getDisplayStatus } from "./status-indicator";
 import type { components } from "@/lib/api/schema";
 
 type Invoice = components["schemas"]["InvoiceResponse"];
-type InvoiceStatus = components["schemas"]["InvoiceStatus"];
-
-const STATUS_DOT: Record<InvoiceStatus, string> = {
-  Draft: "bg-zinc-400",
-  Sent: "bg-blue-500",
-  Paid: "bg-emerald-500",
-  Overdue: "bg-red-500",
-  Cancelled: "bg-zinc-300",
-};
 
 interface ActivityListProps {
   invoices: Invoice[];
@@ -33,6 +25,7 @@ interface ActivityListProps {
 
 export function ActivityList({ invoices, loading }: ActivityListProps) {
   const t = useTranslations("dashboard.activity");
+  const tInvoices = useTranslations("invoices");
   const locale = useLocale();
   const prefix = locale === "en" ? "" : "/de";
   const formatCurrency = useFormatCurrency();
@@ -73,11 +66,13 @@ export function ActivityList({ invoices, loading }: ActivityListProps) {
                   <span
                     className={cn(
                       "size-2 shrink-0 rounded-full",
-                      STATUS_DOT[inv.status ?? "Draft"]
+                      STATUS_COLORS[getDisplayStatus(inv)]
                     )}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{inv.number}</p>
+                    <p className="truncate font-medium">
+                      {inv.number ?? tInvoices("draftNumber")}
+                    </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {inv.recipientName}
                     </p>

@@ -462,7 +462,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    status?: components["schemas"]["InvoiceStatus"];
+                    status?: string;
                     page?: number;
                     pageSize?: number;
                     search?: string;
@@ -480,6 +480,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["InvoiceResponse"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
                     };
                 };
             };
@@ -654,6 +663,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/invoices/{id}/finalize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/invoices/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/invoices/{id}/status": {
         parameters: {
             query?: never;
@@ -783,6 +902,12 @@ export interface components {
             issueDate?: string | null;
             /** Format: date */
             dueDate?: string | null;
+            /** Format: date */
+            serviceDate?: string | null;
+            /** Format: date */
+            servicePeriodStart?: string | null;
+            /** Format: date */
+            servicePeriodEnd?: string | null;
             lineItems: components["schemas"]["CreateLineItemRequest"][];
             /** Format: double */
             taxRate?: number;
@@ -802,6 +927,8 @@ export interface components {
             id?: string;
             number?: string | null;
             status?: components["schemas"]["InvoiceStatus"];
+            type?: components["schemas"]["InvoiceType"];
+            isOverdue?: boolean;
             senderName?: string | null;
             senderAddress?: string | null;
             recipientName?: string | null;
@@ -811,10 +938,17 @@ export interface components {
             /** Format: date */
             dueDate?: string;
             /** Format: date */
+            serviceDate?: string | null;
+            /** Format: date */
+            servicePeriodStart?: string | null;
+            /** Format: date */
+            servicePeriodEnd?: string | null;
+            /** Format: date */
             paidAt?: string | null;
             currency?: string | null;
             /** Format: double */
             taxRate?: number;
+            isSmallBusiness?: boolean;
             /** Format: double */
             subtotal?: number;
             /** Format: double */
@@ -823,13 +957,19 @@ export interface components {
             total?: number;
             lineItems?: components["schemas"]["LineItemResponse"][] | null;
             notes?: string | null;
+            /** Format: uuid */
+            cancellationOfId?: string | null;
+            cancellationOfNumber?: string | null;
+            cancelledByNumber?: string | null;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
             updatedAt?: string;
         };
         /** @enum {string} */
-        InvoiceStatus: "Draft" | "Sent" | "Paid" | "Overdue" | "Cancelled";
+        InvoiceStatus: "Draft" | "Finalized" | "Paid" | "Cancelled";
+        /** @enum {string} */
+        InvoiceType: "Invoice" | "Cancellation";
         LineItemResponse: {
             /** Format: uuid */
             id?: string;
@@ -851,7 +991,7 @@ export interface components {
             /** Format: double */
             paid?: number;
             /** Format: double */
-            sent?: number;
+            finalized?: number;
         };
         ProblemDetails: {
             type?: string | null;
@@ -883,7 +1023,7 @@ export interface components {
             /** Format: int32 */
             draftCount?: number;
             /** Format: int32 */
-            sentCount?: number;
+            finalizedCount?: number;
             /** Format: int32 */
             paidCount?: number;
             monthlyRevenue?: components["schemas"]["MonthlyRevenueDto"][] | null;
@@ -900,6 +1040,16 @@ export interface components {
             name?: string | null;
             defaultSenderName?: string | null;
             defaultSenderAddress?: string | null;
+            taxNumber?: string | null;
+            vatId?: string | null;
+            isSmallBusiness?: boolean | null;
+            street?: string | null;
+            postalCode?: string | null;
+            city?: string | null;
+            country?: string | null;
+            iban?: string | null;
+            bic?: string | null;
+            bankName?: string | null;
         };
         UpdateStatusRequest: {
             status: components["schemas"]["InvoiceStatus"];
@@ -913,6 +1063,16 @@ export interface components {
             createdAt?: string;
             defaultSenderName?: string | null;
             defaultSenderAddress?: string | null;
+            taxNumber?: string | null;
+            vatId?: string | null;
+            isSmallBusiness?: boolean;
+            street?: string | null;
+            postalCode?: string | null;
+            city?: string | null;
+            country?: string | null;
+            iban?: string | null;
+            bic?: string | null;
+            bankName?: string | null;
         };
     };
     responses: never;

@@ -3,16 +3,28 @@ import type { components } from "@/lib/api/schema";
 
 type InvoiceStatus = components["schemas"]["InvoiceStatus"];
 
-export const STATUS_COLORS: Record<InvoiceStatus, string> = {
+// "Overdue" is not a stored status — the API derives it (Finalized + past due
+// date) and exposes it as isOverdue. For display it behaves like a status.
+export type DisplayStatus = InvoiceStatus | "Overdue";
+
+export function getDisplayStatus(invoice: {
+  status?: InvoiceStatus;
+  isOverdue?: boolean;
+}): DisplayStatus {
+  if (invoice.isOverdue) return "Overdue";
+  return invoice.status ?? "Draft";
+}
+
+export const STATUS_COLORS: Record<DisplayStatus, string> = {
   Draft: "bg-zinc-400",
-  Sent: "bg-blue-500",
+  Finalized: "bg-blue-500",
   Paid: "bg-emerald-500",
   Overdue: "bg-red-500",
   Cancelled: "bg-zinc-300",
 };
 
 interface StatusIndicatorProps {
-  status: InvoiceStatus;
+  status: DisplayStatus;
   label: string;
   className?: string;
 }
