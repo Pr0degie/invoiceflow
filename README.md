@@ -8,7 +8,7 @@ Full-stack invoice management for freelancers and small teams.
 GoBD-compliant invoices, PDF export, status tracking — built as a portfolio project.
 
 [![Status](https://img.shields.io/badge/status-in%20development-orange)]()
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=nextdotjs)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
@@ -33,7 +33,7 @@ real domain logic, real deployment, no shortcuts.
 ┌─────────────────────────┐         ┌──────────────────────────┐
 │  Frontend (this repo)   │         │  invoice-api             │
 │                         │         │  (separate repository)   │
-│  • Next.js 15           │ ◄─────► │                          │
+│  • Next.js 16           │ ◄─────► │                          │
 │  • NextAuth.js v5       │  HTTPS  │  • ASP.NET Core 8        │
 │  • TanStack Query       │  + JWT  │  • PostgreSQL + EF Core  │
 │  • Typed API client     │         │  • QuestPDF              │
@@ -55,25 +55,26 @@ schema synchronization.
 |------|--------|
 | Marketing landing page | ✅ Done |
 | Sign-up / Sign-in | ✅ Done |
-| API client (typed, with refresh flow) | 🚧 In progress |
-| App shell (sidebar + topbar) | ⏳ Planned |
-| Dashboard (KPIs, revenue chart) | ⏳ Planned |
-| Invoice list (filters, PDF download) | ⏳ Planned |
-| Invoice detail + status flow | ⏳ Planned |
-| Invoice create/edit form | ⏳ Planned |
-| Settings | ⏳ Planned |
+| API client (typed, with refresh flow) | ✅ Done |
+| App shell (sidebar + topbar) | ✅ Done |
+| Dashboard (KPIs, revenue chart) | ✅ Done |
+| Invoice list (filters, PDF download) | ✅ Done |
+| Invoice detail + status flow | ✅ Done |
+| Invoice create/edit form | ✅ Done |
+| Finalization (sequential invoice numbering, Storno, PDF archiving) | ✅ Done |
+| Settings (profile + tax & invoicing data) | ✅ Done |
 | Production deployment | ⏳ Planned |
 
 ## Tech Stack
 
-**Framework & language:** Next.js 15 (App Router), TypeScript 5
+**Framework & language:** Next.js 16 (App Router), TypeScript 5
 **Styling:** Tailwind CSS 4, shadcn/ui, lucide-react
 **State:** TanStack Query for server state, React Hook Form + Zod for forms
 **Auth:** NextAuth.js v5 (credentials provider against the invoice-api JWT endpoint)
 **i18n:** next-intl, English default with German support
 **Charts:** Recharts
 **Toasts:** Sonner
-**Tooling:** pnpm, ESLint, Playwright (visual feedback during development)
+**Tooling:** npm, ESLint, Playwright (visual feedback during development)
 
 ## Design philosophy
 
@@ -104,11 +105,11 @@ Frontend runs at `http://localhost:3000`. Full env reference: `.env.example`.
 
 | Command | What it does |
 |---------|--------------|
-| `pnpm dev` | Local dev server with hot reload |
-| `pnpm build` | Production build |
-| `pnpm lint` | ESLint check |
-| `pnpm typecheck` | TypeScript check |
-| `pnpm api:types` | Regenerate TS types from `openapi.json` |
+| `npm run dev` | Local dev server with hot reload |
+| `npm run build` | Production build |
+| `npm run lint` | ESLint check |
+| `npm run typecheck` | TypeScript check |
+| `npm run api:types` | Regenerate TS types from `openapi.json` |
 
 ## What this project deliberately does NOT have
 
@@ -135,14 +136,16 @@ invoiceflow-frontend/
 │   │   ├── [locale]/     # i18n route group
 │   │   └── api/          # NextAuth handlers
 │   ├── components/       # UI components
-│   ├── lib/
-│   │   ├── api/          # Typed API client + hooks
-│   │   ├── i18n/         # Formatters
-│   │   └── schemas/      # Zod schemas
-│   └── messages/         # i18n translations
-├── _prompts/             # Build prompts driving development
-├── refs/                 # UI reference screenshots (gitignored)
-├── CLAUDE.md             # Design brief + API contract
+│   ├── i18n/             # next-intl routing + navigation
+│   └── lib/
+│       ├── api/          # Typed API client + hooks
+│       ├── i18n/         # Formatters
+│       ├── schemas/      # Zod schemas
+│       └── tax-profile.ts # Sender tax profile helper
+├── messages/             # i18n translations (en, de)
+├── docs/                 # API contract, auth, i18n, branding, state management
+├── invoiceflow-pack-en/  # Build prompts + UI reference screenshots
+├── CLAUDE.md             # Working agreement + design brief
 └── openapi.json          # API spec (source for type generation)
 ```
 
@@ -150,7 +153,7 @@ invoiceflow-frontend/
 
 The codebase is built using a structured prompt-driven workflow with Claude Code,
 where each major area (auth, dashboard, invoice flow) has a corresponding spec
-in `_prompts/`. Specs are versioned alongside the code — useful both as a
+in `invoiceflow-pack-en/prompts/` (kept locally alongside the code). Specs are useful both as a
 working document during development and as a record of decisions for anyone
 reading the repo afterward.
 

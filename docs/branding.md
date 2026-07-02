@@ -55,7 +55,7 @@ These override generic SaaS defaults:
 | Status | Color | Dot / Badge |
 |---|---|---|
 | Draft | `zinc` / gray | Gray dot |
-| Sent | `blue` | Blue dot |
+| Open (Finalized) | `blue` | Blue dot |
 | Paid | `emerald` | Green dot |
-| Overdue | `red` | Red dot |
+| Overdue *(derived — `isOverdue` flag on Finalized invoices past due, not a stored status)* | `red` | Red dot |
 | Cancelled | `zinc` (muted) | Gray dot, strikethrough text |

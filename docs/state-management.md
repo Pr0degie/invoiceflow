@@ -47,8 +47,11 @@ Available hooks:
 - `useInvoice(id)` — single
 - `useStats(range?)` — dashboard KPIs
 - `useCreateInvoice()` — mutation
-- `useUpdateInvoiceStatus()` — mutation with optimistic update
-- `useDeleteInvoice()` — mutation
+- `useUpdateInvoice()` — mutation (PUT, drafts only — 409 otherwise)
+- `useUpdateInvoiceStatus()` — mutation with optimistic update (Finalized ↔ Paid only)
+- `useFinalizeInvoice()` — mutation (POST `/finalize`, assigns number + archives PDF)
+- `useCancelInvoice()` — mutation (POST `/cancel`, creates the Stornorechnung)
+- `useDeleteInvoice()` — mutation (drafts only)
 - `useDownloadInvoicePdf()` — mutation (triggers browser download)
 
 ### API client
@@ -70,7 +73,7 @@ Auth header injected per-call via `bearerHeader(token)` helper (not a global mid
 ## Error handling
 
 `src/lib/api/errors.ts` exports `ApiError` with `.isUnauthorized`, `.isConflict`, `.isNotFound`.
-409 Conflict on delete/update → show specific message ("Only draft invoices can be deleted.").
+409 Conflict = lifecycle violation — delete/edit of a non-draft, a disallowed status transition, finalizing with an incomplete tax profile or missing service date/period, or cancelling an invoice that isn't Finalized → show the action-specific message (e.g. "Only draft invoices can be deleted.").
 Global unexpected errors → `sonner` toast with generic message.
 
 ---
