@@ -22,11 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -58,35 +53,6 @@ const senderSchema = z.object({
   senderName: z.string(),
   senderAddress: z.string(),
 });
-
-const passwordSchema = z
-  .object({
-    current: z.string().min(1),
-    newPassword: z.string().min(8),
-    confirm: z.string().min(1),
-  })
-  .refine((d) => d.newPassword === d.confirm, { path: ["confirm"] });
-
-// --- Shared "coming soon" button wrapper ---
-
-function ComingSoon({
-  children,
-  label,
-}: {
-  children: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <span tabIndex={0} className="inline-flex">
-          {children}
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top">{label}</TooltipContent>
-    </Tooltip>
-  );
-}
 
 // --- Tab: Profile ---
 
@@ -299,12 +265,12 @@ function SecurityTab() {
     setError,
     reset,
     formState: { isDirty, errors },
-  } = useForm<z.infer<typeof passwordSchema>>({
+  } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: { current: "", newPassword: "", confirm: "" },
   });
 
-  async function onSubmit(values: z.infer<typeof passwordSchema>) {
+  async function onSubmit(values: z.infer<typeof schema>) {
     try {
       await changePassword.mutateAsync({
         currentPassword: values.current,

@@ -46,7 +46,6 @@ import { useFormatCurrency } from "@/lib/i18n/formatters";
 import { StatusIndicator, STATUS_COLORS } from "./status-indicator";
 import { InvoiceRowActions } from "./invoice-row-actions";
 
-type Invoice = components["schemas"]["InvoiceResponse"];
 type InvoiceStatus = components["schemas"]["InvoiceStatus"];
 
 const PAGE_SIZE = 25;

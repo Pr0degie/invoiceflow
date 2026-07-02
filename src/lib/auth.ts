@@ -1,13 +1,10 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
-import { db } from "@/lib/db";
-import { loginSchema } from "@/lib/validations";
+import { loginSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
 import { refreshAccessToken } from "@/lib/auth/refresh";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(db),
   trustHost: true,
   session: { strategy: "jwt" },
   pages: {
