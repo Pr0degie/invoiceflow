@@ -61,7 +61,7 @@ Auth header injected per-call via `bearerHeader(token)` helper (not a global mid
 ## Forms
 
 - `react-hook-form` + `zod` for all forms.
-- Zod schemas in `src/lib/validations.ts` (auth) or `src/lib/schemas/` for invoice forms.
+- Zod schemas in `src/lib/schemas/` (`auth.ts` for auth, `invoice-form.ts` for invoices).
 - Inline errors under each field; `sonner` toast on unrecoverable submit error.
 - Do NOT use `react-hook-form` for simple 1–2 field forms; plain React state is fine.
 

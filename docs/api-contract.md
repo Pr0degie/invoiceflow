@@ -30,15 +30,26 @@ Authorization: Bearer <jwt>
 ## Auth Endpoints
 
 ```
-POST /api/auth/register  { name, email, password } → AuthResponse
-POST /api/auth/login     { email, password }        → AuthResponse
-POST /api/auth/refresh   { refreshToken }           → AuthResponse
-GET  /api/auth/me                                   → UserDto
-POST /api/auth/logout    { refreshToken }           → 204
+POST   /api/auth/register         { name, email, password } → AuthResponse
+POST   /api/auth/login            { email, password }        → AuthResponse
+POST   /api/auth/refresh          { refreshToken }           → AuthResponse
+GET    /api/auth/me                                          → UserDto
+PATCH  /api/auth/me               { name?, defaultSenderName?, defaultSenderAddress? } → UserDto
+DELETE /api/auth/me                                          → 204   (deletes the account)
+POST   /api/auth/change-password  { currentPassword, newPassword } → 204
+POST   /api/auth/logout           { refreshToken }           → 204
 ```
 
 `AuthResponse`: `{ token, refreshToken, expiresAt, user: UserDto }`
-`UserDto`: `{ id, email, name, createdAt }`
+`UserDto`: `{ id, email, name, createdAt, defaultSenderName, defaultSenderAddress }`
+(`defaultSenderName` / `defaultSenderAddress` are nullable — used to prefill the sender fields on new invoices)
+
+Refresh tokens are single-use (rotated on every refresh) with a **60 s grace
+window**: re-sending a token rotated <60 s ago returns the *same* successor
+tokens (concurrent-refresh safe). Reuse **after** 60 s revokes all of the
+user's refresh tokens (theft signal) → 401. `register`, `login`, `refresh`,
+`logout`, and `change-password` are rate-limited per IP (5/min) → 429 when
+exceeded.
 
 ---
 
@@ -55,8 +66,14 @@ GET    /api/invoices                    → Invoice[]   ← FLAT ARRAY, no pagin
 POST   /api/invoices                    → Invoice     (status starts as Draft)
 GET    /api/invoices/{id}               → Invoice
 PUT    /api/invoices/{id}               → Invoice     (Draft only — 409 otherwise)
-PATCH  /api/invoices/{id}/status        → Invoice
+PATCH  /api/invoices/{id}/status        → Invoice     (409 on a forbidden transition)
   body: { status: "Sent"|"Paid"|"Overdue"|"Cancelled" }
+  allowed transitions:
+    Draft   → Sent
+    Sent    → Paid | Overdue | Cancelled
+    Overdue → Paid | Cancelled
+    Paid    → Overdue          (undo path; paidAt survives Paid→Overdue→Paid)
+  paidAt is set on first Paid, cleared only on Cancelled
 DELETE /api/invoices/{id}                             (Draft only — 409 otherwise)
 GET    /api/invoices/{id}/pdf           → application/pdf (binary)
 ```
@@ -119,6 +136,16 @@ interface Invoice {
   updatedAt: string;
 }
 ```
+
+---
+
+## Error shape
+
+All 4xx errors return `{ "error": "<message>" }` (unchanged by the 2026-07
+hardening pass — errors are now produced by a central middleware, same shape).
+`400` validation, `401` unauthenticated/dead session, `404` not found,
+`409` conflict (non-draft edit/delete, forbidden status transition,
+email already registered), `429` rate-limited.
 
 ---
 

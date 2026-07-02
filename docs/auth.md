@@ -41,7 +41,29 @@ useSession() / auth()
 
 If refresh fails: `session.error = "RefreshAccessTokenError"` — sign the user out and redirect.
 
+The backend rotates refresh tokens on every refresh (single-use) with a 60 s
+grace window for concurrent refreshes; reuse after the window kills all of the
+user's sessions. See `../invoice-api/docs/adr/0001-refresh-token-rotation-grace.md`.
+
 Implementation: `src/lib/auth/refresh.ts`
+
+---
+
+## Dead-session handling (global)
+
+Three layers end a dead session instead of failing silently:
+
+1. **Server:** the `(app)` layout redirects to login when `session.error` is set
+   (only runs on navigation).
+2. **Client, session-driven:** `SessionGuard` (mounted in `Providers`) watches
+   `useSession()` and calls `signOut({ callbackUrl: "/auth/login" })` when
+   `session.error === "RefreshAccessTokenError"`.
+3. **Client, API-driven:** the `QueryClient`'s `QueryCache`/`MutationCache`
+   `onError` (in `query-provider.tsx`) triggers the same signout on any
+   `ApiError` with status 401. 401s are not retried.
+
+All three funnel through `signOutOnAuthError()`
+(`src/lib/auth/sign-out-on-auth-error.ts`), which dedupes concurrent triggers.
 
 ---
 
@@ -92,6 +114,8 @@ The `bearerHeader()` helper returns `{}` if token is undefined — safe to call 
 | `src/lib/api/client.ts` | `apiClient` + `bearerHeader()` |
 | `src/types/next-auth.d.ts` | Type extensions: `session.accessToken`, `session.error`, JWT fields |
 | `src/app/api/auth/register/route.ts` | Register proxy route |
+| `src/lib/auth/sign-out-on-auth-error.ts` | Deduped global signout on dead sessions |
+| `src/components/providers/session-guard.tsx` | Client watcher for `session.error` |
 
 ---
 
@@ -112,5 +136,6 @@ session.error            // "RefreshAccessTokenError" | undefined
 - No GitHub / Google OAuth
 - No magic links
 - No password reset (not implemented — ask before adding)
-- The `PrismaAdapter` is still wired for forward-compat with potential future OAuth;
-  it does nothing for Credentials logins with JWT session strategy
+- No database adapter — sessions are pure JWT; invoice-api owns the user store.
+  Prisma was removed entirely (it broke the Edge middleware and did nothing for
+  Credentials logins with JWT session strategy)
