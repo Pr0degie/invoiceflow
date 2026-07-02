@@ -38,7 +38,6 @@ export function useInvoices(filters: InvoiceListFilters = {}) {
       return result.data as Invoice[];
     },
     enabled: !!token,
-    staleTime: 30_000,
   });
 }
 
