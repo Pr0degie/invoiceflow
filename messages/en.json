@@ -431,6 +431,8 @@
       "finalize": {
         "title": "Finalize invoice?",
         "description": "The invoice receives its final sequential number and cannot be edited afterwards. Corrections then require a cancellation invoice (Storno).",
+        "issueDateLabel": "Issue date",
+        "issueDateHint": "Recorded as the legal issue date (default: today, future dates not allowed). The due date shifts to keep your payment terms.",
         "cancel": "Cancel",
         "confirm": "Finalize",
         "profileIncomplete": "Finalizing requires your tax details (address plus tax number or VAT ID).",

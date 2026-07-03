@@ -29,7 +29,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { format as formatDateFns } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   useUpdateInvoiceStatus,
   useDeleteInvoice,
@@ -54,6 +57,8 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
   const localePrefix = locale === "en" ? "" : `/${locale}`;
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
+  // "" = no override → the server stamps its own today as Ausstellungsdatum
+  const [finalizeIssueDate, setFinalizeIssueDate] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
 
   const updateStatus = useUpdateInvoiceStatus();
@@ -66,13 +71,18 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
   const isCancellation = invoice.type === "Cancellation";
   const id = invoice.id!;
 
+  const todayIso = formatDateFns(new Date(), "yyyy-MM-dd");
+
   function handleFinalize() {
-    finalizeInvoice.mutate(id, {
-      onSuccess: (finalized) =>
-        toast.success(
-          t("form.success.finalized", { number: finalized.number ?? "" })
-        ),
-    });
+    finalizeInvoice.mutate(
+      { id, issueDate: finalizeIssueDate || undefined },
+      {
+        onSuccess: (finalized) =>
+          toast.success(
+            t("form.success.finalized", { number: finalized.number ?? "" })
+          ),
+      }
+    );
     setFinalizeOpen(false);
   }
 
@@ -122,7 +132,12 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
           </DropdownMenuItem>
 
           {status === "Draft" && (
-            <DropdownMenuItem onClick={() => setFinalizeOpen(true)}>
+            <DropdownMenuItem
+              onClick={() => {
+                setFinalizeIssueDate("");
+                setFinalizeOpen(true);
+              }}
+            >
               <FileCheck className="mr-2 size-4" />
               {t("actions.finalize")}
             </DropdownMenuItem>
@@ -170,6 +185,22 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
               {t("form.finalize.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {/* Ausstellungsdatum: today unless overridden (past dates only) */}
+          <div className="space-y-1.5">
+            <Label htmlFor={`finalize-issue-date-${id}`}>
+              {t("form.finalize.issueDateLabel")}
+            </Label>
+            <Input
+              id={`finalize-issue-date-${id}`}
+              type="date"
+              max={todayIso}
+              value={finalizeIssueDate || todayIso}
+              onChange={(e) => setFinalizeIssueDate(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("form.finalize.issueDateHint")}
+            </p>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("form.finalize.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleFinalize}>

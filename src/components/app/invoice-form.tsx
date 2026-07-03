@@ -291,7 +291,8 @@ function InvoiceForm(props: Props) {
         }
 
         if (intent === "finalize") {
-          const finalized = await finalizeInvoice.mutateAsync(created.id!);
+          // No issueDate override: the server stamps today as Ausstellungsdatum
+          const finalized = await finalizeInvoice.mutateAsync({ id: created.id! });
           toast.success(tf("success.finalized", { number: finalized.number ?? "" }));
         } else {
           toast.success(

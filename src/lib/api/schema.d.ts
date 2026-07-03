@@ -681,7 +681,13 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["FinalizeInvoiceRequest"];
+                    "text/json": components["schemas"]["FinalizeInvoiceRequest"];
+                    "application/*+json": components["schemas"]["FinalizeInvoiceRequest"];
+                };
+            };
             responses: {
                 /** @description Success */
                 200: {
@@ -690,6 +696,15 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["InvoiceResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
                     };
                 };
                 /** @description Not Found */
@@ -921,6 +936,10 @@ export interface components {
             /** Format: double */
             unitPrice?: number;
             unit?: string | null;
+        };
+        FinalizeInvoiceRequest: {
+            /** Format: date */
+            issueDate?: string | null;
         };
         InvoiceResponse: {
             /** Format: uuid */

@@ -431,6 +431,8 @@
       "finalize": {
         "title": "Rechnung festschreiben?",
         "description": "Die Rechnung erhält ihre fortlaufende Rechnungsnummer und kann danach nicht mehr geändert werden. Korrekturen sind nur per Stornorechnung möglich.",
+        "issueDateLabel": "Ausstellungsdatum",
+        "issueDateHint": "Wird als offizielles Ausstellungsdatum festgeschrieben (Standard: heute, kein Datum in der Zukunft). Das Fälligkeitsdatum verschiebt sich entsprechend deiner Zahlungsfrist.",
         "cancel": "Abbrechen",
         "confirm": "Festschreiben",
         "profileIncomplete": "Zum Festschreiben werden deine Steuerdaten benötigt (Adresse sowie Steuernummer oder USt-IdNr.).",

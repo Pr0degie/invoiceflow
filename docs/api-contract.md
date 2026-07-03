@@ -94,9 +94,14 @@ GET    /api/invoices/{id}               → Invoice
 PUT    /api/invoices/{id}               → Invoice     (Draft only — 409 otherwise)
 
 POST   /api/invoices/{id}/finalize      → Invoice     (Draft only)
-  Assigns the sequential number, snapshots isSmallBusiness (§ 19 → taxRate forced
-  to 0), renders + archives the PDF, sets status Finalized. 409 when: not a
-  Draft, sender tax profile incomplete, or no service date/period on the invoice.
+  body (OPTIONAL): { issueDate?: "YYYY-MM-DD" }
+  Sets the legal Ausstellungsdatum: today by default, or the explicit issueDate
+  (400 if in the future). dueDate shifts to keep the draft's payment-term span
+  (dueDate − issueDate, clamped to ≥ 0). The invoice-number year derives from
+  the FINAL issueDate. Assigns the sequential number, snapshots isSmallBusiness
+  (§ 19 → taxRate forced to 0), renders + archives the PDF, sets status
+  Finalized. 409 when: not a Draft, sender tax profile incomplete, or no
+  service date/period on the invoice.
   Afterwards the invoice is IMMUTABLE — corrections go through /cancel.
 
 POST   /api/invoices/{id}/cancel        → Invoice     (the new Stornorechnung)

@@ -4,6 +4,36 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-03 — Prompt 12.2: Ausstellungsdatum at finalization (+ lockfile check)
+
+**Backend (invoice-api), 95 tests green:**
+
+1. `POST /api/invoices/{id}/finalize` accepts an optional body
+   `{ issueDate?: "YYYY-MM-DD" }`. Default (no body): `IssueDate = today` at
+   finalization — a stale draft date no longer becomes the legal
+   Ausstellungsdatum on the archived PDF. Explicit `issueDate` is respected;
+   future dates → 400.
+2. Payment terms preserved: `DueDate` shifts to keep the draft's
+   `DueDate − IssueDate` span (clamped to ≥ 0) relative to the new IssueDate.
+3. Dates are set before number assignment, so the invoice-number year derives
+   from the final IssueDate (December draft finalized in January → `{newYear}-001`).
+4. 6 new tests (default today, explicit date, future rejection, span shift,
+   span clamp, number-year); overdue-filter and counter-reset tests reworked to
+   back-dated finalization (future draft dates can no longer produce overdue
+   finalized invoices).
+
+**Frontend (invoiceflow):**
+
+5. `openapi.json` + `schema.d.ts` regenerated. `useFinalizeInvoice` now takes
+   `{ id, issueDate? }` — no body sent unless the user overrides (server stamps
+   its own today, avoiding client/server midnight skew).
+6. Both finalize confirmation dialogs (detail view + row actions) show the
+   Ausstellungsdatum (default: today) with a date input capped at today;
+   i18n de/en. "Save & Finalize" in the form sends no override.
+7. `package-lock.json` audited for the reported `npm ci` drift: already in
+   sync at HEAD (`npm install` produced no diff; clean-state `npm ci` green) —
+   nothing to commit.
+
 ## 2026-07-03 — Prompt 12 Part B: Legally compliant invoices (§ 14/§ 19 UStG, GoBD)
 
 Cross-repo feature; ADR: `../invoice-api/docs/adr/0002-invoice-immutability-and-pdf-archiving.md`.

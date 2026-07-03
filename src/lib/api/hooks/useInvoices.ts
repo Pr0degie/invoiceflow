@@ -134,15 +134,18 @@ export function useFinalizeInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    // issueDate ("YYYY-MM-DD") overrides the Ausstellungsdatum; omitted, the
+    // server stamps its own today — avoids client/server midnight skew.
+    mutationFn: async ({ id, issueDate }: { id: string; issueDate?: string }) => {
       const result = await apiClient.POST("/api/invoices/{id}/finalize", {
         params: { path: { id } },
+        body: issueDate ? { issueDate } : undefined,
         headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
     },
-    onSuccess: (invoice, id) => {
+    onSuccess: (invoice, { id }) => {
       queryClient.setQueryData(queryKeys.invoices.detail(id), invoice);
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.lists() });
       queryClient.invalidateQueries({ queryKey: ["stats"] });

@@ -18,7 +18,10 @@ import {
   RotateCcw,
   FileText,
 } from "lucide-react";
+import { format as formatDateFns } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -86,6 +89,8 @@ export function InvoiceDetailView({ id }: { id: string }) {
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
+  // "" = no override → the server stamps its own today as Ausstellungsdatum
+  const [finalizeIssueDate, setFinalizeIssueDate] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
 
   if (isLoading) return <LoadingSkeleton />;
@@ -129,6 +134,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const smallBusiness =
     invoice.isSmallBusiness || (status === "Draft" && !!me?.isSmallBusiness);
   const profileComplete = isTaxProfileComplete(me);
+  const todayIso = formatDateFns(new Date(), "yyyy-MM-dd");
 
   function handleStatusChange(newStatus: InvoiceStatus) {
     updateStatus.mutate(
@@ -138,12 +144,15 @@ export function InvoiceDetailView({ id }: { id: string }) {
   }
 
   function handleFinalize() {
-    finalizeInvoice.mutate(invoiceId, {
-      onSuccess: (finalized) =>
-        toast.success(
-          t("form.success.finalized", { number: finalized.number ?? "" })
-        ),
-    });
+    finalizeInvoice.mutate(
+      { id: invoiceId, issueDate: finalizeIssueDate || undefined },
+      {
+        onSuccess: (finalized) =>
+          toast.success(
+            t("form.success.finalized", { number: finalized.number ?? "" })
+          ),
+      }
+    );
     setFinalizeOpen(false);
   }
 
@@ -230,7 +239,10 @@ export function InvoiceDetailView({ id }: { id: string }) {
           {/* Draft: finalize (assigns the number, freezes the invoice) */}
           {status === "Draft" && (
             <Button
-              onClick={() => setFinalizeOpen(true)}
+              onClick={() => {
+                setFinalizeIssueDate("");
+                setFinalizeOpen(true);
+              }}
               disabled={finalizeInvoice.isPending || !profileComplete}
             >
               {finalizeInvoice.isPending ? (
@@ -587,6 +599,22 @@ export function InvoiceDetailView({ id }: { id: string }) {
               {t("form.finalize.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {/* Ausstellungsdatum: today unless overridden (past dates only) */}
+          <div className="space-y-1.5">
+            <Label htmlFor="finalize-issue-date">
+              {t("form.finalize.issueDateLabel")}
+            </Label>
+            <Input
+              id="finalize-issue-date"
+              type="date"
+              max={todayIso}
+              value={finalizeIssueDate || todayIso}
+              onChange={(e) => setFinalizeIssueDate(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("form.finalize.issueDateHint")}
+            </p>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("form.finalize.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleFinalize}>
