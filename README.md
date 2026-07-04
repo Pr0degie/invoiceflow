@@ -70,7 +70,7 @@ schema synchronization.
 
 **Framework & language:** Next.js 16 (App Router), TypeScript 5
 **Styling:** Tailwind CSS 4, shadcn/ui, lucide-react
-**State:** TanStack Query for server state, React Hook Form + Zod for forms
+**State:** TanStack Query for server state, React Hook Form + Zod for forms, dnd-kit for line-item reordering
 **Auth:** NextAuth.js v5 (credentials provider against the invoice-api JWT endpoint)
 **i18n:** next-intl, English default with German support
 **Charts:** Recharts

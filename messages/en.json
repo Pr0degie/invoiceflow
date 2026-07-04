@@ -385,7 +385,8 @@
         "unitPrice": "Unit price",
         "amount": "Amount",
         "addItem": "Add line item",
-        "remove": "Remove"
+        "remove": "Remove",
+        "reorder": "Drag to reorder"
       },
       "units": {
         "h": "h",

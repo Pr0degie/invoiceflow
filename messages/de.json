@@ -385,7 +385,8 @@
         "unitPrice": "Einzelpreis",
         "amount": "Betrag",
         "addItem": "Position hinzufügen",
-        "remove": "Entfernen"
+        "remove": "Entfernen",
+        "reorder": "Ziehen zum Verschieben"
       },
       "units": {
         "h": "h",

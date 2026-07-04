@@ -70,7 +70,7 @@ generiert — keine manuelle Schema-Synchronisation.
 
 **Framework & Sprache:** Next.js 16 (App Router), TypeScript 5
 **Styling:** Tailwind CSS 4, shadcn/ui, lucide-react
-**State:** TanStack Query für Server-State, React Hook Form + Zod für Formulare
+**State:** TanStack Query für Server-State, React Hook Form + Zod für Formulare, dnd-kit fürs Umsortieren der Positionen
 **Auth:** NextAuth.js v5 (Credentials-Provider gegen den invoice-api JWT-Endpunkt)
 **i18n:** next-intl, Englisch als Default mit deutscher Unterstützung
 **Charts:** Recharts

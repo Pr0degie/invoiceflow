@@ -68,6 +68,10 @@ Auth header injected per-call via `bearerHeader(token)` helper (not a global mid
 - Zod schemas in `src/lib/schemas/` (`auth.ts` for auth, `invoice-form.ts` for invoices).
 - Inline errors under each field; `sonner` toast on unrecoverable submit error.
 - Do NOT use `react-hook-form` for simple 1–2 field forms; plain React state is fine.
+- Line items in the invoice form reorder via drag & drop (`@dnd-kit/core` +
+  `@dnd-kit/sortable`, grip-handle only) wired to `useFieldArray`'s `move()` —
+  the array order is what the API persists as `Position`. Keyboard sorting
+  works too (focus handle, Space/Enter picks up, arrows move).
 
 ---
 

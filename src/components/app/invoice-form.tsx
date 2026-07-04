@@ -13,8 +13,26 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
+  GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { CSS } from "@dnd-kit/utilities";
 import {
   invoiceFormSchema,
   type InvoiceFormValues,
@@ -233,10 +251,31 @@ function InvoiceForm(props: Props) {
     formState: { errors, isDirty },
   } = form;
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     name: "lineItems",
     control,
   });
+
+  // Drag & drop reordering — the array order IS the position on the invoice
+  // (the API stamps Position from the array index, see docs/api-contract.md).
+  // Drag starts only from the grip handle, so the row's inputs stay usable.
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    // scrollBehavior "auto": the default smooth scroll races the sensor's rect
+    // measurements — on a scrolled page arrow-key moves land half a row off.
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      scrollBehavior: "auto",
+    })
+  );
+
+  function handleLineItemDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const from = fields.findIndex((f) => f.id === active.id);
+    const to = fields.findIndex((f) => f.id === over.id);
+    if (from !== -1 && to !== -1) move(from, to);
+  }
 
   // Live totals
   const watchedItems = useWatch({ control, name: "lineItems" });
@@ -679,7 +718,8 @@ function InvoiceForm(props: Props) {
         {/* Line items */}
         <FormSection title={tf("sections.lineItems")}>
           {/* Header row — desktop only */}
-          <div className="hidden grid-cols-[1fr_80px_100px_120px_100px_40px] gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[24px_1fr_80px_100px_120px_100px_40px] gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground md:grid">
+            <span />
             <span>{tf("lineItem.description")}</span>
             <span className="text-right">{tf("lineItem.quantity")}</span>
             <span>{tf("lineItem.unit")}</span>
@@ -688,6 +728,16 @@ function InvoiceForm(props: Props) {
             <span />
           </div>
 
+          <DndContext
+            sensors={dndSensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={handleLineItemDragEnd}
+          >
+            <SortableContext
+              items={fields.map((f) => f.id)}
+              strategy={verticalListSortingStrategy}
+            >
           <div className="space-y-2">
             {fields.map((field, index) => {
               const itemQty = Number(watchedItems?.[index]?.quantity) || 0;
@@ -696,12 +746,11 @@ function InvoiceForm(props: Props) {
               const itemAmount = itemQty * itemPrice;
 
               return (
-                <div
+                <SortableLineItemRow
                   key={field.id}
-                  className={cn(
-                    "rounded-lg border p-3",
-                    "md:grid md:grid-cols-[1fr_80px_100px_120px_100px_40px] md:items-start md:gap-2 md:rounded-none md:border-0 md:border-b md:p-1 md:last:border-b-0"
-                  )}
+                  id={field.id}
+                  handleLabel={tf("lineItem.reorder")}
+                  dragDisabled={fields.length <= 1}
                 >
                   {/* Description */}
                   <div className="mb-2 md:mb-0">
@@ -833,10 +882,12 @@ function InvoiceForm(props: Props) {
                       <Trash2 className="size-4" />
                     </Button>
                   </div>
-                </div>
+                </SortableLineItemRow>
               );
             })}
           </div>
+            </SortableContext>
+          </DndContext>
 
           {errors.lineItems?.root?.message && (
             <p className="text-sm text-destructive">
@@ -918,6 +969,62 @@ function InvoiceForm(props: Props) {
   );
 }
 
+
+/**
+ * One draggable line-item row. Mobile: card with a full-height grip strip on
+ * the left. Desktop: the wrapper dissolves (`md:contents`) so the field cells
+ * join the surrounding grid — same column template as the header row.
+ */
+function SortableLineItemRow({
+  id,
+  handleLabel,
+  dragDisabled,
+  children,
+}: {
+  id: string;
+  handleLabel: string;
+  dragDisabled: boolean;
+  children: React.ReactNode;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: dragDisabled });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={cn(
+        "flex gap-2 rounded-lg border p-3",
+        "md:grid md:grid-cols-[24px_1fr_80px_100px_120px_100px_40px] md:items-start md:gap-2 md:rounded-none md:border-0 md:border-b md:p-1 md:last:border-b-0",
+        isDragging &&
+          "relative z-10 bg-background shadow-lg md:rounded-lg md:border md:border-b"
+      )}
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        aria-label={handleLabel}
+        disabled={dragDisabled}
+        className={cn(
+          "flex touch-none items-center justify-center self-stretch rounded text-muted-foreground/50 transition-colors md:h-9 md:self-auto",
+          dragDisabled
+            ? "cursor-default opacity-40"
+            : "cursor-grab hover:text-foreground active:cursor-grabbing"
+        )}
+      >
+        <GripVertical className="size-4" />
+      </button>
+      <div className="min-w-0 flex-1 md:contents">{children}</div>
+    </div>
+  );
+}
 
 function FormSection({
   title,

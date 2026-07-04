@@ -4,6 +4,22 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-04 — Prompt 13 follow-up: drag & drop reordering of line items
+
+Frontend only (the API already persists array order as `Position`). Line-item
+rows in the invoice form get a grip handle: dragging reorders via
+`useFieldArray().move()` (`@dnd-kit/core` + `sortable` + `modifiers` +
+`utilities`, new deps). Drag activates only on the handle (5 px constraint),
+restricted to the vertical axis; keyboard sorting via the focused handle
+(Space/Enter + arrows) with `scrollBehavior: "auto"` (smooth scroll races the
+sensor's rect measurements). Mobile: full-height grip strip on the card;
+desktop: extra 24 px grid column, row dissolves into the grid via
+`md:contents`. i18n `lineItem.reorder` de/en.
+
+**Verified:** Playwright — mouse-drag row 3 → top, saved, API returns the new
+order; keyboard pick-up/move/drop round-trip; screenshots 1440/375
+light+dark, no console errors; `tsc` + `next build` green.
+
 ## 2026-07-04 — Prompt 13: Line-item order, PDF sender line, reopen finalized invoices
 
 Cross-repo; ADR: `../invoice-api/docs/adr/0003-reopen-finalized-invoices-before-dispatch.md`.
