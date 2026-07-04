@@ -190,7 +190,11 @@ interface Invoice {
   currency: string;      // "EUR"
   lineItems: LineItem[];  // ALWAYS in input order — the API stores a per-item
                           // Position (array index at create/update) and sorts
-                          // every response by it; send arrays in display order
+                          // every response by it; send arrays in display order.
+                          // Each item carries displayMode: "AsEntered" | "FlatRate".
+                          // FlatRate is DISPLAY-ONLY: PDF + detail view render the
+                          // position as 1 × pauschal × line total; the stored
+                          // quantity/unit/unitPrice stay untouched and drive totals.
 
   subtotal: number;      // computed (net)
   taxAmount: number;     // computed (0 for Kleinunternehmer)

@@ -386,13 +386,18 @@
         "amount": "Amount",
         "addItem": "Add line item",
         "remove": "Remove",
-        "reorder": "Drag to reorder"
+        "reorder": "Drag to reorder",
+        "displayMode": "Display"
       },
       "units": {
         "h": "h",
         "flat": "flat",
         "piece": "piece",
         "day": "day"
+      },
+      "displayModes": {
+        "AsEntered": "As entered",
+        "FlatRate": "Flat rate"
       },
       "taxRates": {
         "0": "0% (exempt)",

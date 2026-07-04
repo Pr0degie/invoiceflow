@@ -386,13 +386,18 @@
         "amount": "Betrag",
         "addItem": "Position hinzufügen",
         "remove": "Entfernen",
-        "reorder": "Ziehen zum Verschieben"
+        "reorder": "Ziehen zum Verschieben",
+        "displayMode": "Anzeige"
       },
       "units": {
         "h": "h",
         "flat": "pauschal",
         "piece": "Stück",
         "day": "Tag"
+      },
+      "displayModes": {
+        "AsEntered": "Wie eingegeben",
+        "FlatRate": "Pauschal"
       },
       "taxRates": {
         "0": "0% (steuerfrei)",

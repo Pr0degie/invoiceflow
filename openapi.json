@@ -1092,6 +1092,9 @@
           "unit": {
             "type": "string",
             "nullable": true
+          },
+          "displayMode": {
+            "$ref": "#/components/schemas/LineItemDisplayMode"
           }
         },
         "additionalProperties": false
@@ -1245,6 +1248,13 @@
         ],
         "type": "string"
       },
+      "LineItemDisplayMode": {
+        "enum": [
+          "AsEntered",
+          "FlatRate"
+        ],
+        "type": "string"
+      },
       "LineItemResponse": {
         "type": "object",
         "properties": {
@@ -1271,6 +1281,9 @@
           "total": {
             "type": "number",
             "format": "double"
+          },
+          "displayMode": {
+            "$ref": "#/components/schemas/LineItemDisplayMode"
           }
         },
         "additionalProperties": false

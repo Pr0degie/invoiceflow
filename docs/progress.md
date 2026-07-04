@@ -4,6 +4,23 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-04 — Pauschal display mode per line item
+
+Cross-repo. `LineItem.DisplayMode` (`AsEntered` | `FlatRate`, migration
+`AddLineItemDisplayMode`): display-only — a FlatRate position renders on the
+invoice (PDF + detail view) as quantity 1, unit "pauschal", unit price = line
+total, while the entered quantity/unit/price stay stored and keep driving the
+math. Storno keeps the sign (−1 × |total|). Copied on Storno; 3 new tests
+(114 total). Frontend: "Display" dropdown per form row (As entered / Flat
+rate), i18n de/en, detail view mirrors the PDF rendering. PDF header/total
+already monochrome from the earlier prompt.
+
+**Verified:** API round-trip (displayMode persists, totals unchanged),
+rendered PDF shows 1 × pauschal × 720 € for an 8 h × 90 € entry next to a
+normal row; dropdown switch + save in the browser updates the detail view;
+screenshots 1440/375 light+dark, no console errors; `dotnet test` (114),
+`tsc`, `next build` green.
+
 ## 2026-07-04 — Prompt 13 follow-up: drag & drop reordering of line items
 
 Frontend only (the API already persists array order as `Position`). Line-item

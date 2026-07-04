@@ -7,11 +7,17 @@ export const TAX_RATE_OPTIONS = [0, 0.07, 0.19] as const;
 export type LineItemUnit = (typeof LINE_ITEM_UNITS)[number];
 export type Currency = (typeof CURRENCIES)[number];
 
+// Display-only: "FlatRate" renders the position on the invoice as
+// 1 × pauschal × line total; the entered values stay stored and drive the math.
+export const LINE_ITEM_DISPLAY_MODES = ["AsEntered", "FlatRate"] as const;
+export type LineItemDisplayMode = (typeof LINE_ITEM_DISPLAY_MODES)[number];
+
 export const lineItemSchema = z.object({
   description: z.string().min(1, "Required"),
   quantity: z.coerce.number().positive("Must be > 0"),
   unitPrice: z.coerce.number().min(0, "Must be ≥ 0"),
   unit: z.enum(LINE_ITEM_UNITS),
+  displayMode: z.enum(LINE_ITEM_DISPLAY_MODES),
 });
 
 export const invoiceFormSchema = z

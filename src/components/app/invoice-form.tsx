@@ -37,6 +37,7 @@ import {
   invoiceFormSchema,
   type InvoiceFormValues,
   LINE_ITEM_UNITS,
+  LINE_ITEM_DISPLAY_MODES,
   CURRENCIES,
   TAX_RATE_OPTIONS,
 } from "@/lib/schemas/invoice-form";
@@ -99,7 +100,9 @@ function getCreateDefaults(d?: { senderName?: string; senderAddress?: string }):
     currency: "EUR",
     taxRate: 0.19,
     notes: "",
-    lineItems: [{ description: "", quantity: 1, unitPrice: 0, unit: "h" }],
+    lineItems: [
+      { description: "", quantity: 1, unitPrice: 0, unit: "h", displayMode: "AsEntered" },
+    ],
   };
 }
 
@@ -124,6 +127,9 @@ function mapInvoiceToForm(invoice: Invoice): InvoiceFormValues {
       quantity: item.quantity ?? 1,
       unitPrice: item.unitPrice ?? 0,
       unit: (item.unit as InvoiceFormValues["lineItems"][number]["unit"]) ?? "h",
+      displayMode:
+        (item.displayMode as InvoiceFormValues["lineItems"][number]["displayMode"]) ??
+        "AsEntered",
     })),
   };
 }
@@ -150,6 +156,7 @@ function mapFormToApi(values: InvoiceFormValues, isSmallBusiness: boolean) {
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
       unit: item.unit,
+      displayMode: item.displayMode,
     })),
   };
 }
@@ -718,13 +725,14 @@ function InvoiceForm(props: Props) {
         {/* Line items */}
         <FormSection title={tf("sections.lineItems")}>
           {/* Header row — desktop only */}
-          <div className="hidden grid-cols-[24px_1fr_80px_100px_120px_100px_40px] gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground md:grid">
+          <div className="hidden grid-cols-[24px_1fr_70px_90px_105px_90px_130px_40px] gap-2 px-1 text-xs font-medium uppercase tracking-wider text-muted-foreground md:grid">
             <span />
             <span>{tf("lineItem.description")}</span>
             <span className="text-right">{tf("lineItem.quantity")}</span>
             <span>{tf("lineItem.unit")}</span>
             <span className="text-right">{tf("lineItem.unitPrice")}</span>
             <span className="text-right">{tf("lineItem.amount")}</span>
+            <span>{tf("lineItem.displayMode")}</span>
             <span />
           </div>
 
@@ -777,6 +785,7 @@ function InvoiceForm(props: Props) {
                               quantity: 1,
                               unitPrice: 0,
                               unit: "h",
+                              displayMode: "AsEntered",
                             });
                             setTimeout(() => {
                               const next =
@@ -868,6 +877,34 @@ function InvoiceForm(props: Props) {
                     </span>
                   </div>
 
+                  {/* Display mode — FlatRate renders 1 × pauschal × line total on the invoice */}
+                  <div className="mb-2 md:mb-0">
+                    <Label className="mb-1 text-xs text-muted-foreground md:hidden">
+                      {tf("lineItem.displayMode")}
+                    </Label>
+                    <Select
+                      defaultValue={field.displayMode}
+                      onValueChange={(v) =>
+                        setValue(
+                          `lineItems.${index}.displayMode`,
+                          v as InvoiceFormValues["lineItems"][number]["displayMode"],
+                          { shouldDirty: true }
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {LINE_ITEM_DISPLAY_MODES.map((m) => (
+                          <SelectItem key={m} value={m}>
+                            {tf(`displayModes.${m}` as Parameters<typeof tf>[0])}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Delete */}
                   <div className="flex justify-end md:justify-center">
                     <Button
@@ -900,7 +937,13 @@ function InvoiceForm(props: Props) {
             variant="ghost"
             className="mt-2 w-full border border-dashed text-muted-foreground hover:text-foreground"
             onClick={() =>
-              append({ description: "", quantity: 1, unitPrice: 0, unit: "h" })
+              append({
+                description: "",
+                quantity: 1,
+                unitPrice: 0,
+                unit: "h",
+                displayMode: "AsEntered",
+              })
             }
           >
             <Plus className="mr-2 size-4" />
@@ -1001,7 +1044,7 @@ function SortableLineItemRow({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         "flex gap-2 rounded-lg border p-3",
-        "md:grid md:grid-cols-[24px_1fr_80px_100px_120px_100px_40px] md:items-start md:gap-2 md:rounded-none md:border-0 md:border-b md:p-1 md:last:border-b-0",
+        "md:grid md:grid-cols-[24px_1fr_70px_90px_105px_90px_130px_40px] md:items-start md:gap-2 md:rounded-none md:border-0 md:border-b md:p-1 md:last:border-b-0",
         isDragging &&
           "relative z-10 bg-background shadow-lg md:rounded-lg md:border md:border-b"
       )}

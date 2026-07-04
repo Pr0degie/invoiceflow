@@ -497,32 +497,47 @@ export function InvoiceDetailView({ id }: { id: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(invoice.lineItems ?? []).map((item, i) => (
-                  <TableRow
-                    key={item.id ?? i}
-                    className="border-b last:border-b-0"
-                  >
-                    <TableCell className="pl-0 py-3">
-                      {item.description ?? "—"}
-                    </TableCell>
-                    <TableCell className="py-3 text-right tabular-nums">
-                      {item.quantity != null
-                        ? item.quantity % 1 === 0
-                          ? item.quantity.toFixed(0)
-                          : item.quantity.toFixed(2)
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="py-3 text-right text-muted-foreground">
-                      {item.unit ?? "—"}
-                    </TableCell>
-                    <TableCell className="py-3 text-right tabular-nums">
-                      {formatCurrency(item.unitPrice ?? 0)}
-                    </TableCell>
-                    <TableCell className="pr-0 py-3 text-right tabular-nums">
-                      {formatCurrency(item.total ?? 0)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {(invoice.lineItems ?? []).map((item, i) => {
+                  // FlatRate: display-only collapse to 1 × pauschal × line total
+                  // (mirrors the PDF; negative quantities = Storno keep their sign)
+                  const flat = item.displayMode === "FlatRate";
+                  const quantity = flat
+                    ? (item.quantity ?? 0) < 0
+                      ? -1
+                      : 1
+                    : item.quantity;
+                  const unit = flat ? t("form.units.flat") : item.unit;
+                  const unitPrice = flat
+                    ? Math.abs(item.total ?? 0)
+                    : item.unitPrice;
+
+                  return (
+                    <TableRow
+                      key={item.id ?? i}
+                      className="border-b last:border-b-0"
+                    >
+                      <TableCell className="pl-0 py-3">
+                        {item.description ?? "—"}
+                      </TableCell>
+                      <TableCell className="py-3 text-right tabular-nums">
+                        {quantity != null
+                          ? quantity % 1 === 0
+                            ? quantity.toFixed(0)
+                            : quantity.toFixed(2)
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="py-3 text-right text-muted-foreground">
+                        {unit ?? "—"}
+                      </TableCell>
+                      <TableCell className="py-3 text-right tabular-nums">
+                        {formatCurrency(unitPrice ?? 0)}
+                      </TableCell>
+                      <TableCell className="pr-0 py-3 text-right tabular-nums">
+                        {formatCurrency(item.total ?? 0)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
             </div>

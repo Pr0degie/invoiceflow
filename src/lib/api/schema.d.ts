@@ -1000,6 +1000,7 @@ export interface components {
             /** Format: double */
             unitPrice?: number;
             unit?: string | null;
+            displayMode?: components["schemas"]["LineItemDisplayMode"];
         };
         FinalizeInvoiceRequest: {
             /** Format: date */
@@ -1053,6 +1054,8 @@ export interface components {
         InvoiceStatus: "Draft" | "Finalized" | "Paid" | "Cancelled";
         /** @enum {string} */
         InvoiceType: "Invoice" | "Cancellation";
+        /** @enum {string} */
+        LineItemDisplayMode: "AsEntered" | "FlatRate";
         LineItemResponse: {
             /** Format: uuid */
             id?: string;
@@ -1064,6 +1067,7 @@ export interface components {
             unitPrice?: number;
             /** Format: double */
             total?: number;
+            displayMode?: components["schemas"]["LineItemDisplayMode"];
         };
         LoginDto: {
             email?: string | null;
