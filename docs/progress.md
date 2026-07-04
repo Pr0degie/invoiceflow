@@ -4,6 +4,46 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-04 — E-Rechnung (XRechnung / EN 16931) — Prompt 13
+
+Cross-repo. Every finalized invoice now emits a legally binding German
+**E-Rechnung (XRechnung 3.0, EN 16931 CII pure XML)** alongside the PDF, via
+`ZUGFeRD-csharp` v18. Generated once at finalization and archived immutably in a
+new `InvoiceXml` table (mirrors `InvoicePdf`; discarded on reopen, re-archived on
+re-finalize). ADR: `../invoice-api/docs/adr/0004-e-invoice-xrechnung.md`.
+
+**Backend (invoice-api):** migration `AddEInvoiceXRechnungSupport` — structured
+recipient fields (`RecipientStreet/PostalCode/City/CountryCode/Email/VatId`,
+`BuyerReference`) on `Invoice`, `Phone` on `User`, `InvoiceXml` table. New
+`EInvoiceService` (§ 19 → tax category **E** + exemption text; Storno → type
+**384** + negative amounts + BT-25 reference; seller from profile, buyer from
+invoice; SEPA payment means from IBAN). Finalize now also requires seller phone
+(BT-42) and structured recipient address + email (BT-49) → 409. New
+`GET /api/invoices/{id}/xml` (draft → 409; legacy backfill only when data is
+present). PDF recipient block now renders from structured fields. 7 new backend
+tests (4 golden: Kleinunternehmer/Regel/Storno + seller/buyer mapping; XML
+archiving; reopen discards XML; recipient precondition); full suite **121** green.
+
+**Frontend (invoiceflow):** regenerated API types; invoice form recipient block
+replaced with structured inputs + email + optional VAT ID + buyer reference;
+settings gains a phone field + E-Rechnung hints, free-text sender-address
+textarea removed (sender address now derived from the structured tax address);
+"E-Rechnung (XML)" download button on finalized invoices (disabled + tooltip for
+legacy invoices). `tsc` clean, `next build` green.
+
+**Verified:** backend `dotnet test` 121 green; over HTTP against the rebuilt
+container — finalize → XML type 380 (XRechnung 3.0, buyer reference, totals
+match); Storno → type **384**, BT-25 = original number, negative totals; draft
+`/xml` → 409. Sample XML eyeballed (correct spec ID, category E + § 19 text).
+Screenshots (settings + invoice form, 1440/375, light + dark) reviewed.
+All three sample XMLs (Kleinunternehmer / Regelbesteuerung / Storno) validated
+in the **ELSTER E-Rechnung viewer** — render cleanly, no errors, Storno shows
+type 384 + negative totals + BT-25 reference to the original. Also fixed a
+(pre-existing) dnd-kit SSR hydration warning on the line-items reorder handle
+by giving `DndContext` a stable `id`.
+
+---
+
 ## 2026-07-04 — Pauschal display mode per line item
 
 Cross-repo. `LineItem.DisplayMode` (`AsEntered` | `FlatRate`, migration

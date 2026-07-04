@@ -25,7 +25,14 @@ export const invoiceFormSchema = z
     senderName: z.string().min(1, "Required"),
     senderAddress: z.string().min(1, "Required"),
     recipientName: z.string().min(1, "Required"),
-    recipientAddress: z.string().min(1, "Required"),
+    // Structured recipient (buyer) data — required for the E-Rechnung (XRechnung).
+    recipientStreet: z.string().min(1, "Required"),
+    recipientPostalCode: z.string().min(1, "Required"),
+    recipientCity: z.string().min(1, "Required"),
+    recipientCountryCode: z.string().min(1, "Required"),
+    recipientEmail: z.string().min(1, "Required").email("Invalid email"),
+    recipientVatId: z.string().optional(),
+    buyerReference: z.string().optional(),
     issueDate: z.string().min(1, "Required"),
     dueDate: z.string().min(1, "Required"),
     // Leistungsdatum (single date) or Leistungszeitraum (period) — § 14 Abs. 4

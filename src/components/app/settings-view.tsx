@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { isTaxProfileComplete } from "@/lib/tax-profile";
 import {
@@ -53,7 +52,6 @@ const profileSchema = z.object({
 
 const senderSchema = z.object({
   senderName: z.string(),
-  senderAddress: z.string(),
 });
 
 const taxSchema = z.object({
@@ -64,6 +62,7 @@ const taxSchema = z.object({
   postalCode: z.string(),
   city: z.string(),
   country: z.string(),
+  phone: z.string(),
   iban: z
     .string()
     .refine(
@@ -84,6 +83,7 @@ function taxDefaults(me?: {
   postalCode?: string | null;
   city?: string | null;
   country?: string | null;
+  phone?: string | null;
   iban?: string | null;
   bic?: string | null;
   bankName?: string | null;
@@ -96,10 +96,25 @@ function taxDefaults(me?: {
     postalCode: me?.postalCode ?? "",
     city: me?.city ?? "",
     country: me?.country ?? "",
+    phone: me?.phone ?? "",
     iban: me?.iban ?? "",
     bic: me?.bic ?? "",
     bankName: me?.bankName ?? "",
   };
+}
+
+// The invoice sender-address prefill (DefaultSenderAddress) is derived from the
+// structured tax address so there's a single source of truth for the postal address.
+function composeSenderAddress(v: {
+  street: string;
+  postalCode: string;
+  city: string;
+  country: string;
+}): string {
+  const cityLine = `${v.postalCode} ${v.city}`.trim();
+  return [v.street.trim(), cityLine, v.country.trim()]
+    .filter((line) => line.length > 0)
+    .join("\n");
 }
 
 // --- Tab: Profile ---
@@ -204,21 +219,18 @@ function SenderTab() {
     resolver: zodResolver(senderSchema),
     defaultValues: {
       senderName: me?.defaultSenderName ?? "",
-      senderAddress: me?.defaultSenderAddress ?? "",
     },
   });
 
   useEffect(() => {
     reset({
       senderName: me?.defaultSenderName ?? "",
-      senderAddress: me?.defaultSenderAddress ?? "",
     });
-  }, [me?.defaultSenderName, me?.defaultSenderAddress, reset]);
+  }, [me?.defaultSenderName, reset]);
 
   async function onSubmit(values: z.infer<typeof senderSchema>) {
     await updateProfile.mutateAsync({
       defaultSenderName: values.senderName,
-      defaultSenderAddress: values.senderAddress,
     });
     reset(values);
     toast.success(t("sender.saved"));
@@ -258,19 +270,7 @@ function SenderTab() {
               <p className="mt-1 text-xs text-destructive">{errors.senderName.message}</p>
             )}
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="sender-address">{t("sender.address")}</Label>
-            <Textarea
-              id="sender-address"
-              {...register("senderAddress")}
-              placeholder={t("sender.addressPlaceholder")}
-              rows={4}
-              className="resize-none"
-            />
-            {errors.senderAddress && (
-              <p className="mt-1 text-xs text-destructive">{errors.senderAddress.message}</p>
-            )}
-          </div>
+          <p className="text-muted-foreground text-sm">{t("sender.addressHint")}</p>
         </CardContent>
         <CardFooter className="justify-end border-t bg-muted/30">
           <Button
@@ -322,6 +322,9 @@ function TaxTab() {
       postalCode: values.postalCode.trim(),
       city: values.city.trim(),
       country: values.country.trim(),
+      phone: values.phone.trim(),
+      // Keep the invoice sender-address prefill in sync with the structured address.
+      defaultSenderAddress: composeSenderAddress(values),
       iban: values.iban.trim(),
       bic: values.bic.trim(),
       bankName: values.bankName.trim(),
@@ -420,6 +423,11 @@ function TaxTab() {
             <Label htmlFor="tax-country">{t("tax.country")}</Label>
             <Input id="tax-country" {...register("country")} placeholder="Deutschland" />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tax-phone">{t("tax.phone")}</Label>
+            <Input id="tax-phone" {...register("phone")} placeholder="+49 89 1234567" />
+          </div>
+          <p className="text-muted-foreground text-xs">{t("tax.eRechnungHint")}</p>
         </CardContent>
       </Card>
 

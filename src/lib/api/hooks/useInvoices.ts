@@ -302,3 +302,28 @@ export function useDownloadInvoicePdf() {
     },
   });
 }
+
+export function useDownloadInvoiceXml() {
+  const token = useToken();
+
+  return useMutation({
+    mutationFn: async ({ id, number }: { id: string; number: string | null | undefined }) => {
+      const response = await fetch(
+        `/api/backend/api/invoices/${id}/xml`,
+        { headers: bearerHeader(token) as HeadersInit }
+      );
+      if (!response.ok) throw new ApiError(response.status, null);
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${number ?? "Entwurf"}.xml`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    onError: () => {
+      toast.error("E-Rechnung (XML) could not be downloaded.");
+    },
+  });
+}

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   RotateCcw,
   FileText,
+  FileCode,
   LockOpen,
 } from "lucide-react";
 import { format as formatDateFns } from "date-fns";
@@ -59,6 +60,7 @@ import {
   useUpdateInvoiceStatus,
   useDeleteInvoice,
   useDownloadInvoicePdf,
+  useDownloadInvoiceXml,
   useFinalizeInvoice,
   useCancelInvoice,
   useReopenInvoice,
@@ -87,6 +89,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const updateStatus = useUpdateInvoiceStatus();
   const deleteInvoice = useDeleteInvoice();
   const downloadPdf = useDownloadInvoicePdf();
+  const downloadXml = useDownloadInvoiceXml();
   const finalizeInvoice = useFinalizeInvoice();
   const cancelInvoice = useCancelInvoice();
   const reopenInvoice = useReopenInvoice();
@@ -252,6 +255,37 @@ export function InvoiceDetailView({ id }: { id: string }) {
               ? t("detail.downloading")
               : t("actions.downloadPdf")}
           </Button>
+
+          {/* Download E-Rechnung (XML) — finalized invoices only. Legacy invoices
+              without structured recipient data can't produce a valid XRechnung. */}
+          {status !== "Draft" &&
+            (() => {
+              const canDownloadXml =
+                !!invoice.recipientEmail && !!invoice.recipientCity;
+              return (
+                <span title={canDownloadXml ? undefined : t("detail.xmlLegacyDisabled")}>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      downloadXml.mutate({
+                        id: invoiceId,
+                        number: invoice.number,
+                      })
+                    }
+                    disabled={downloadXml.isPending || !canDownloadXml}
+                  >
+                    {downloadXml.isPending ? (
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                    ) : (
+                      <FileCode className="mr-2 size-4" />
+                    )}
+                    {downloadXml.isPending
+                      ? t("detail.downloadingXml")
+                      : t("actions.downloadXml")}
+                  </Button>
+                </span>
+              );
+            })()}
 
           {/* Draft: finalize (assigns the number, freezes the invoice) */}
           {status === "Draft" && (

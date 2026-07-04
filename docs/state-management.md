@@ -49,11 +49,12 @@ Available hooks:
 - `useCreateInvoice()` — mutation
 - `useUpdateInvoice()` — mutation (PUT, drafts only — 409 otherwise)
 - `useUpdateInvoiceStatus()` — mutation with optimistic update (Finalized ↔ Paid only)
-- `useFinalizeInvoice()` — mutation, takes `{ id, issueDate? }` (POST `/finalize`; stamps the Ausstellungsdatum — server-today unless `issueDate` overrides — assigns number + archives PDF)
+- `useFinalizeInvoice()` — mutation, takes `{ id, issueDate? }` (POST `/finalize`; stamps the Ausstellungsdatum — server-today unless `issueDate` overrides — assigns number + archives PDF and E-Rechnung XML)
 - `useReopenInvoice()` — mutation, takes `id` (POST `/reopen`; Finalized → Draft for pre-dispatch corrections, number retained; detail cache set from the response, lists + stats invalidated)
 - `useCancelInvoice()` — mutation (POST `/cancel`, creates the Stornorechnung)
 - `useDeleteInvoice()` — mutation (drafts only; reopened drafts with a number → 409)
 - `useDownloadInvoicePdf()` — mutation (triggers browser download)
+- `useDownloadInvoiceXml()` — mutation (downloads the E-Rechnung XML; finalized invoices only)
 
 ### API client
 

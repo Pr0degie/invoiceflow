@@ -90,7 +90,13 @@ function getCreateDefaults(d?: { senderName?: string; senderAddress?: string }):
     senderName: d?.senderName ?? "",
     senderAddress: d?.senderAddress ?? "",
     recipientName: "",
-    recipientAddress: "",
+    recipientStreet: "",
+    recipientPostalCode: "",
+    recipientCity: "",
+    recipientCountryCode: "DE",
+    recipientEmail: "",
+    recipientVatId: "",
+    buyerReference: "",
     issueDate: TODAY,
     dueDate: IN_14,
     serviceMode: "date",
@@ -111,7 +117,13 @@ function mapInvoiceToForm(invoice: Invoice): InvoiceFormValues {
     senderName: invoice.senderName ?? "",
     senderAddress: invoice.senderAddress ?? "",
     recipientName: invoice.recipientName ?? "",
-    recipientAddress: invoice.recipientAddress ?? "",
+    recipientStreet: invoice.recipientStreet ?? "",
+    recipientPostalCode: invoice.recipientPostalCode ?? "",
+    recipientCity: invoice.recipientCity ?? "",
+    recipientCountryCode: invoice.recipientCountryCode ?? "DE",
+    recipientEmail: invoice.recipientEmail ?? "",
+    recipientVatId: invoice.recipientVatId ?? "",
+    buyerReference: invoice.buyerReference ?? "",
     issueDate: invoice.issueDate ?? TODAY,
     dueDate: invoice.dueDate ?? IN_14,
     serviceMode: invoice.servicePeriodStart ? "period" : "date",
@@ -139,7 +151,13 @@ function mapFormToApi(values: InvoiceFormValues, isSmallBusiness: boolean) {
     senderName: values.senderName,
     senderAddress: values.senderAddress,
     recipientName: values.recipientName,
-    recipientAddress: values.recipientAddress,
+    recipientStreet: values.recipientStreet,
+    recipientPostalCode: values.recipientPostalCode,
+    recipientCity: values.recipientCity,
+    recipientCountryCode: values.recipientCountryCode || "DE",
+    recipientEmail: values.recipientEmail,
+    recipientVatId: values.recipientVatId || null,
+    buyerReference: values.buyerReference || null,
     issueDate: values.issueDate || null,
     dueDate: values.dueDate || null,
     serviceDate: values.serviceMode === "date" ? values.serviceDate || null : null,
@@ -519,16 +537,87 @@ function InvoiceForm(props: Props) {
             />
           </FieldWrapper>
           <FieldWrapper
-            label={tf("fields.recipientAddress")}
-            error={errors.recipientAddress?.message}
+            label={tf("fields.recipientStreet")}
+            error={errors.recipientStreet?.message}
           >
-            <Textarea
-              {...register("recipientAddress")}
-              rows={3}
-              placeholder={"Leopoldstraße 1\n80802 München\nDeutschland"}
-              aria-invalid={!!errors.recipientAddress}
+            <Input
+              {...register("recipientStreet")}
+              placeholder="Leopoldstraße 1"
+              aria-invalid={!!errors.recipientStreet}
             />
           </FieldWrapper>
+          <div className="grid gap-4 sm:grid-cols-[1fr_2fr]">
+            <FieldWrapper
+              label={tf("fields.recipientPostalCode")}
+              error={errors.recipientPostalCode?.message}
+            >
+              <Input
+                {...register("recipientPostalCode")}
+                placeholder="80802"
+                aria-invalid={!!errors.recipientPostalCode}
+              />
+            </FieldWrapper>
+            <FieldWrapper
+              label={tf("fields.recipientCity")}
+              error={errors.recipientCity?.message}
+            >
+              <Input
+                {...register("recipientCity")}
+                placeholder="München"
+                aria-invalid={!!errors.recipientCity}
+              />
+            </FieldWrapper>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldWrapper
+              label={tf("fields.recipientCountryCode")}
+              error={errors.recipientCountryCode?.message}
+            >
+              <Input
+                {...register("recipientCountryCode")}
+                placeholder="DE"
+                aria-invalid={!!errors.recipientCountryCode}
+              />
+            </FieldWrapper>
+            <FieldWrapper
+              label={tf("fields.recipientEmail")}
+              error={errors.recipientEmail?.message}
+            >
+              <Input
+                type="email"
+                {...register("recipientEmail")}
+                placeholder="rechnung@techstart.de"
+                aria-invalid={!!errors.recipientEmail}
+              />
+            </FieldWrapper>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FieldWrapper
+              label={tf("fields.recipientVatId")}
+              error={errors.recipientVatId?.message}
+            >
+              <Input
+                {...register("recipientVatId")}
+                placeholder="DE123456789"
+                aria-invalid={!!errors.recipientVatId}
+              />
+            </FieldWrapper>
+            <FieldWrapper
+              label={tf("fields.buyerReference")}
+              error={errors.buyerReference?.message}
+            >
+              <>
+                <Input
+                  {...register("buyerReference")}
+                  placeholder="PO-4711"
+                  aria-invalid={!!errors.buyerReference}
+                />
+                <p className="text-muted-foreground text-xs">
+                  {tf("fields.buyerReferenceHint")}
+                </p>
+              </>
+            </FieldWrapper>
+          </div>
         </FormSection>
 
         {/* Invoice details */}
@@ -737,6 +826,7 @@ function InvoiceForm(props: Props) {
           </div>
 
           <DndContext
+            id="line-items"
             sensors={dndSensors}
             collisionDetection={closestCenter}
             modifiers={[restrictToVerticalAxis]}

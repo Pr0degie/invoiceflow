@@ -5,7 +5,8 @@
 **Rechnungen, die sich schreiben lassen.**
 
 Full-Stack-Rechnungsverwaltung für Freelancer und kleine Teams.
-GoBD-konforme Rechnungen, PDF-Export, Status-Tracking — gebaut als Portfolio-Projekt.
+GoBD-konforme Rechnungen, PDF-Export, deutsche E-Rechnung (XRechnung / EN 16931),
+Status-Tracking — gebaut als Portfolio-Projekt.
 
 [![Status](https://img.shields.io/badge/status-in%20entwicklung-orange)]()
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org/)
@@ -62,6 +63,7 @@ generiert — keine manuelle Schema-Synchronisation.
 | Rechnungsliste (Filter, PDF-Download) | ✅ Fertig |
 | Rechnungs-Detail + Status-Flow (Entwurf → Festschreiben → Bezahlt / Storno) | ✅ Fertig |
 | Entsperren vor Versand (auditierte GoBD-Ausnahme, Nummer bleibt erhalten) | ✅ Fertig |
+| E-Rechnung (XRechnung 3.0 / EN 16931 CII-XML, beim Festschreiben archiviert) | ✅ Fertig |
 | Rechnungs-Formular (erstellen/bearbeiten, Leistungsdatum/-zeitraum) | ✅ Fertig |
 | Einstellungen (inkl. Steuern & Rechnungsdaten, § 19 UStG) | ✅ Fertig |
 | Production-Deployment | ⏳ Geplant |

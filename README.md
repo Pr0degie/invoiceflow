@@ -5,7 +5,8 @@
 **Invoicing that gets out of your way.**
 
 Full-stack invoice management for freelancers and small teams.
-GoBD-compliant invoices, PDF export, status tracking — built as a portfolio project.
+GoBD-compliant invoices, PDF export, German E-Rechnung (XRechnung / EN 16931),
+status tracking — built as a portfolio project.
 
 [![Status](https://img.shields.io/badge/status-in%20development-orange)]()
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)](https://nextjs.org/)
@@ -63,6 +64,7 @@ schema synchronization.
 | Invoice create/edit form | ✅ Done |
 | Finalization (sequential invoice numbering, Storno, PDF archiving) | ✅ Done |
 | Reopen before dispatch (audited GoBD exception, number retained) | ✅ Done |
+| E-Rechnung (XRechnung 3.0 / EN 16931 CII XML, archived at finalization) | ✅ Done |
 | Settings (profile + tax & invoicing data) | ✅ Done |
 | Production deployment | ⏳ Planned |
 

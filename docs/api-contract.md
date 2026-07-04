@@ -61,6 +61,7 @@ interface UserDto {
   postalCode: string | null;
   city: string | null;
   country: string | null;
+  phone: string | null;                // BT-42 seller contact — REQUIRED to finalize (E-Rechnung)
   iban: string | null;                 // bank details for the PDF footer (optional)
   bic: string | null;
   bankName: string | null;
@@ -100,8 +101,12 @@ POST   /api/invoices/{id}/finalize      → Invoice     (Draft only)
   (dueDate − issueDate, clamped to ≥ 0). The invoice-number year derives from
   the FINAL issueDate. Assigns the sequential number, snapshots isSmallBusiness
   (§ 19 → taxRate forced to 0), renders + archives the PDF, sets status
-  Finalized. 409 when: not a Draft, sender tax profile incomplete, or no
-  service date/period on the invoice.
+  Finalized. Also generates + archives the legally binding E-Rechnung
+  (XRechnung 3.0, EN 16931 CII XML) — see /xml below. 409 when: not a Draft,
+  sender tax profile incomplete (now also requires phone), no service
+  date/period, OR the recipient lacks a structured address (street+postalCode
+  +city) or email (BT-49). buyerReference defaults to "-", recipient country to
+  "DE".
   Afterwards the invoice is IMMUTABLE — corrections go through /cancel
   (or, ONLY before dispatch, /reopen).
   Re-finalizing a reopened invoice REUSES its existing number (no new draw
@@ -134,6 +139,14 @@ DELETE /api/invoices/{id}                             (Draft only — 409 otherw
 GET    /api/invoices/{id}/pdf           → application/pdf (binary)
   Finalized/Paid/Cancelled: the PDF archived at finalization (GoBD — never
   re-rendered). Draft: live preview with an ENTWURF watermark.
+
+GET    /api/invoices/{id}/xml           → application/xml (binary; E-Rechnung)
+  The XRechnung 3.0 (EN 16931 CII) XML archived at finalization. Draft → 409
+  (drafts have no legal E-Rechnung). Legacy invoices finalized before E-Rechnung
+  support are backfilled on demand ONLY if they carry structured recipient data
+  + email and a seller phone; otherwise 409 names what's missing.
+  Storno invoices are type 384 (Corrected invoice) with negative totals and
+  reference the original in BT-25; § 19 invoices use tax category E (0 %).
 ```
 
 ---
@@ -184,7 +197,16 @@ interface Invoice {
   senderName: string;
   senderAddress: string; // multiline, \n-separated
   recipientName: string;
-  recipientAddress: string;
+  recipientAddress: string;      // legacy free-text; server composes it from the structured fields below
+  // Structured recipient (buyer) data — for the E-Rechnung. Nullable on drafts /
+  // legacy invoices; street+postalCode+city+email enforced at finalization.
+  recipientStreet: string | null;
+  recipientPostalCode: string | null;
+  recipientCity: string | null;
+  recipientCountryCode: string | null;  // ISO 3166-1 alpha-2, defaults to "DE"
+  recipientEmail: string | null;        // BT-49 buyer electronic address
+  recipientVatId: string | null;        // BT-48 (optional)
+  buyerReference: string | null;        // BT-10; defaults to "-" at finalize
   taxRate: number;       // 0.19 = 19%; § 19 forces 0 at finalization
   isSmallBusiness: boolean; // § 19 snapshot taken at finalization
   currency: string;      // "EUR"
