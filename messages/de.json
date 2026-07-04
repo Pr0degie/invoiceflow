@@ -273,7 +273,8 @@
       "delete": "Löschen",
       "finalize": "Festschreiben",
       "storno": "Stornieren",
-      "markAsUnpaid": "Als unbezahlt markieren"
+      "markAsUnpaid": "Als unbezahlt markieren",
+      "reopen": "Wieder bearbeiten"
     },
     "delete": {
       "title": "Rechnung löschen",
@@ -442,6 +443,15 @@
       "smallBusinessTaxNote": "0 % — Kleinunternehmer nach § 19 UStG"
     },
     "draftNumber": "Entwurf",
+    "reopen": {
+      "title": "Rechnung {number} entsperren?",
+      "description": "Damit wird die Festschreibung (GoBD) aufgehoben: Die Rechnung wird wieder zum Entwurf und ist bearbeitbar. Sie behält ihre Rechnungsnummer — beim erneuten Festschreiben wird dieselbe Nummer wiederverwendet und das archivierte PDF ersetzt. Das Entsperren wird im Prüfprotokoll festgehalten.",
+      "stornoHint": "Bereits an den Empfänger versendet? Dann nicht entsperren, sondern stornieren und eine neue Rechnung ausstellen.",
+      "notSentConfirm": "Ich bestätige, dass diese Rechnung noch nicht an den Empfänger versendet wurde.",
+      "cancel": "Festgeschrieben lassen",
+      "confirm": "Als Entwurf entsperren",
+      "success": "Rechnung {number} ist wieder ein Entwurf"
+    },
     "storno": {
       "title": "Rechnung stornieren?",
       "description": "Es wird eine Stornorechnung mit negativen Beträgen zu {number} erstellt und das Original als storniert markiert. Dies kann nicht rückgängig gemacht werden.",

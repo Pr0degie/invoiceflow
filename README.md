@@ -62,6 +62,7 @@ schema synchronization.
 | Invoice detail + status flow | ✅ Done |
 | Invoice create/edit form | ✅ Done |
 | Finalization (sequential invoice numbering, Storno, PDF archiving) | ✅ Done |
+| Reopen before dispatch (audited GoBD exception, number retained) | ✅ Done |
 | Settings (profile + tax & invoicing data) | ✅ Done |
 | Production deployment | ⏳ Planned |
 

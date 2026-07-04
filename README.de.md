@@ -61,6 +61,7 @@ generiert — keine manuelle Schema-Synchronisation.
 | Dashboard (KPIs, Umsatz-Chart) | ✅ Fertig |
 | Rechnungsliste (Filter, PDF-Download) | ✅ Fertig |
 | Rechnungs-Detail + Status-Flow (Entwurf → Festschreiben → Bezahlt / Storno) | ✅ Fertig |
+| Entsperren vor Versand (auditierte GoBD-Ausnahme, Nummer bleibt erhalten) | ✅ Fertig |
 | Rechnungs-Formular (erstellen/bearbeiten, Leistungsdatum/-zeitraum) | ✅ Fertig |
 | Einstellungen (inkl. Steuern & Rechnungsdaten, § 19 UStG) | ✅ Fertig |
 | Production-Deployment | ⏳ Geplant |

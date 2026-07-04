@@ -4,6 +4,49 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-04 — Prompt 13: Line-item order, PDF sender line, reopen finalized invoices
+
+Cross-repo; ADR: `../invoice-api/docs/adr/0003-reopen-finalized-invoices-before-dispatch.md`.
+
+**Backend (invoice-api), 111 tests green:**
+
+1. **Part A — stable line-item order.** `LineItem.Position` (zero-based input
+   order; migration `AddLineItemPosition`, existing rows default 0 — original
+   order not reconstructible). Stamped from the array index in
+   Create/Update, copied on Storno and in the seed data. Every read path
+   sorts: ordered `Include`s, `ToResponse` mapping, and defensively in
+   `PdfService` — the Guid PK made unsorted `Include`s return arbitrary order.
+2. **Part B — DIN 5008 sender line.** Font `.Underline()` replaced by a thin
+   rule (`LineHorizontal(0.5f)`, `#d1d5db`, matching the footer) with
+   `PaddingTop(2)/PaddingBottom(8)` — no more underline sitting on the
+   recipient name.
+3. **Part C — `POST /api/invoices/{id}/reopen`** (Finalized → Draft, audited
+   GoBD exception for pre-dispatch corrections): number retained, sequence
+   untouched; re-finalize reuses the existing number (retry loop skipped);
+   archived PDF deleted at reopen, re-archived at re-finalization. Guards:
+   Draft → 400; Paid/Cancelled/Cancellation → 409. New guard: reopened drafts
+   (number assigned) cannot be deleted (409, would tear a sequence gap).
+   Append-only `InvoiceAuditEntries` table (migration `AddInvoiceAuditEntries`)
+   records every reopen.
+4. 16 new tests: order round-trips (create/update/storno, position-sorted
+   reads), reopen guards + audit, re-finalize number reuse without sequence
+   increment, fresh-PDF archiving, delete guard.
+
+**Frontend (invoiceflow):**
+
+5. `openapi.json` + `schema.d.ts` regenerated. New `useReopenInvoice()` hook.
+6. Detail view: finalized invoices get a "Reopen for editing" action behind
+   the more-menu; AlertDialog with GoBD explanation, amber Storno hint, and a
+   mandatory "not sent to the recipient" checkbox gating the confirm button.
+   On success → redirect to the edit form. i18n de/en (`invoices.reopen.*`).
+
+**Verified:** full E2E against the rebuilt container — order round-trip
+(create/edit/PDF), finalize `2026-020` → reopen (400/409 guards, delete 409)
+→ edit → re-finalize reuses `2026-020`, next invoice draws `2026-021`,
+re-archived PDF shows the corrected recipient (pypdf); audit rows in Postgres;
+UI flow incl. checkbox gating + redirect via Playwright, screenshots
+1440/375 light+dark, no console errors; `tsc` clean, `next build` green.
+
 ## 2026-07-03 — Prompt 12.2: Ausstellungsdatum at finalization (+ lockfile check)
 
 **Backend (invoice-api), 95 tests green:**

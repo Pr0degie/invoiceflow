@@ -102,7 +102,18 @@ POST   /api/invoices/{id}/finalize      → Invoice     (Draft only)
   (§ 19 → taxRate forced to 0), renders + archives the PDF, sets status
   Finalized. 409 when: not a Draft, sender tax profile incomplete, or no
   service date/period on the invoice.
-  Afterwards the invoice is IMMUTABLE — corrections go through /cancel.
+  Afterwards the invoice is IMMUTABLE — corrections go through /cancel
+  (or, ONLY before dispatch, /reopen).
+  Re-finalizing a reopened invoice REUSES its existing number (no new draw
+  from the sequence) and re-archives the PDF.
+
+POST   /api/invoices/{id}/reopen        → Invoice     (Finalized only)
+  Audited GoBD exception (ADR 0003 in invoice-api): resets Finalized → Draft
+  for corrections BEFORE the invoice is sent to the recipient. The invoice
+  keeps its number; the number sequence is untouched. The archived PDF is
+  discarded (re-archived at re-finalization) and an append-only audit entry
+  is written. 400 if already a Draft; 409 for Paid, Cancelled and
+  Cancellation invoices (those are corrected via /cancel + new invoice).
 
 POST   /api/invoices/{id}/cancel        → Invoice     (the new Stornorechnung)
   Finalized only (Paid must be set back to Finalized first — 409 otherwise).
@@ -118,6 +129,8 @@ PATCH  /api/invoices/{id}/status        → Invoice     (409 on a forbidden tran
   paidAt is set on first Paid, cleared when the invoice is cancelled.
 
 DELETE /api/invoices/{id}                             (Draft only — 409 otherwise)
+  Reopened drafts (number already assigned) can NOT be deleted (409) —
+  deleting would tear a gap into the number sequence. Re-finalize instead.
 GET    /api/invoices/{id}/pdf           → application/pdf (binary)
   Finalized/Paid/Cancelled: the PDF archived at finalization (GoBD — never
   re-rendered). Draft: live preview with an ENTWURF watermark.
@@ -175,7 +188,10 @@ interface Invoice {
   taxRate: number;       // 0.19 = 19%; § 19 forces 0 at finalization
   isSmallBusiness: boolean; // § 19 snapshot taken at finalization
   currency: string;      // "EUR"
-  lineItems: LineItem[];
+  lineItems: LineItem[];  // ALWAYS in input order — the API stores a per-item
+                          // Position (array index at create/update) and sorts
+                          // every response by it; send arrays in display order
+
   subtotal: number;      // computed (net)
   taxAmount: number;     // computed (0 for Kleinunternehmer)
   total: number;         // computed (gross; = subtotal when § 19)
@@ -203,9 +219,11 @@ interface Invoice {
 All 4xx errors return `{ "error": "<message>" }` (unchanged by the 2026-07
 hardening pass — errors are now produced by a central middleware, same shape).
 `400` validation, `401` unauthenticated/dead session, `404` not found,
-`409` conflict (non-draft edit/delete, forbidden status transition, finalize
-with incomplete tax profile or missing service date, cancel of a non-Finalized
-invoice, email already registered), `429` rate-limited.
+`409` conflict (non-draft edit/delete, delete of a reopened draft that owns a
+number, forbidden status transition, finalize with incomplete tax profile or
+missing service date, cancel of a non-Finalized invoice, reopen of a
+Paid/Cancelled/Cancellation invoice, email already registered), `429`
+rate-limited.
 
 ---
 

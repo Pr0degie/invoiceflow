@@ -17,11 +17,13 @@ import {
   ChevronRight,
   RotateCcw,
   FileText,
+  LockOpen,
 } from "lucide-react";
 import { format as formatDateFns } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -59,6 +61,7 @@ import {
   useDownloadInvoicePdf,
   useFinalizeInvoice,
   useCancelInvoice,
+  useReopenInvoice,
 } from "@/lib/api/hooks/useInvoices";
 import { useMe } from "@/lib/api/hooks/useMe";
 import { isTaxProfileComplete } from "@/lib/tax-profile";
@@ -86,12 +89,16 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const downloadPdf = useDownloadInvoicePdf();
   const finalizeInvoice = useFinalizeInvoice();
   const cancelInvoice = useCancelInvoice();
+  const reopenInvoice = useReopenInvoice();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [finalizeOpen, setFinalizeOpen] = useState(false);
   // "" = no override → the server stamps its own today as Ausstellungsdatum
   const [finalizeIssueDate, setFinalizeIssueDate] = useState("");
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [reopenOpen, setReopenOpen] = useState(false);
+  // GoBD gate: the user must explicitly confirm the invoice never left the house
+  const [reopenNotSentConfirmed, setReopenNotSentConfirmed] = useState(false);
 
   if (isLoading) return <LoadingSkeleton />;
 
@@ -164,6 +171,16 @@ export function InvoiceDetailView({ id }: { id: string }) {
       },
     });
     setCancelOpen(false);
+  }
+
+  function handleReopen() {
+    reopenInvoice.mutate(invoiceId, {
+      onSuccess: (draft) => {
+        toast.success(t("reopen.success", { number: draft.number ?? "" }));
+        router.push(`${localePrefix}/app/invoices/${invoiceId}/edit`);
+      },
+    });
+    setReopenOpen(false);
   }
 
   function handleDelete() {
@@ -281,6 +298,30 @@ export function InvoiceDetailView({ id }: { id: string }) {
               )}
               {t("actions.storno")}
             </Button>
+          )}
+
+          {/* Finalized: rare, deliberate actions (reopen) behind the menu */}
+          {status === "Finalized" && !isCancellation && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="size-4" />
+                  <span className="sr-only">{t("actions.openMenu")}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[200px]">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setReopenNotSentConfirmed(false);
+                    setReopenOpen(true);
+                  }}
+                  disabled={reopenInvoice.isPending}
+                >
+                  <LockOpen className="mr-2 size-4" />
+                  {t("actions.reopen")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {/* Paid: undo path back to Finalized */}
@@ -619,6 +660,56 @@ export function InvoiceDetailView({ id }: { id: string }) {
             <AlertDialogCancel>{t("form.finalize.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleFinalize}>
               {t("form.finalize.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reopen confirmation — audited GoBD exception, only for unsent invoices */}
+      <AlertDialog
+        open={reopenOpen}
+        onOpenChange={(open) => {
+          setReopenOpen(open);
+          if (!open) setReopenNotSentConfirmed(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("reopen.title", { number: invoice.number ?? "" })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("reopen.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+              {t("reopen.stornoHint")}
+            </div>
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="reopen-not-sent"
+                checked={reopenNotSentConfirmed}
+                onCheckedChange={(checked) =>
+                  setReopenNotSentConfirmed(checked === true)
+                }
+                className="mt-0.5"
+              />
+              <Label
+                htmlFor="reopen-not-sent"
+                className="text-sm font-normal leading-snug"
+              >
+                {t("reopen.notSentConfirm")}
+              </Label>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("reopen.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReopen}
+              disabled={!reopenNotSentConfirmed}
+            >
+              {t("reopen.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

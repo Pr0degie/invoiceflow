@@ -273,7 +273,8 @@
       "delete": "Delete",
       "finalize": "Finalize",
       "storno": "Cancel (Storno)",
-      "markAsUnpaid": "Mark as unpaid"
+      "markAsUnpaid": "Mark as unpaid",
+      "reopen": "Reopen for editing"
     },
     "delete": {
       "title": "Delete invoice",
@@ -442,6 +443,15 @@
       "smallBusinessTaxNote": "0% — § 19 UStG small business"
     },
     "draftNumber": "Draft",
+    "reopen": {
+      "title": "Reopen invoice {number}?",
+      "description": "This lifts the legal fixation (GoBD): the invoice returns to draft and becomes editable again. It keeps its invoice number — finalizing it again reuses the same number and replaces the archived PDF. The reopening is recorded in the audit trail.",
+      "stornoHint": "Already sent to the recipient? Then do not reopen — issue a cancellation invoice (Storno) and create a new one instead.",
+      "notSentConfirm": "I confirm that this invoice has not been sent to the recipient.",
+      "cancel": "Keep finalized",
+      "confirm": "Reopen as draft",
+      "success": "Invoice {number} reopened as draft"
+    },
     "storno": {
       "title": "Cancel this invoice?",
       "description": "This issues a cancellation invoice (Stornorechnung) with negative amounts for {number} and marks the original as cancelled. This cannot be undone.",

@@ -160,6 +160,35 @@ export function useFinalizeInvoice() {
   });
 }
 
+// Reopen: audited exception to immutability for invoices that were NOT sent
+// yet — resets Finalized → Draft. The invoice keeps its number; re-finalizing
+// reuses it. No optimistic update: the server enforces the guards (400/409).
+export function useReopenInvoice() {
+  const token = useToken();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const result = await apiClient.POST("/api/invoices/{id}/reopen", {
+        params: { path: { id } },
+        headers: bearerHeader(token),
+      });
+      throwOnError(result, result.error);
+      return result.data as Invoice;
+    },
+    onSuccess: (invoice, id) => {
+      queryClient.setQueryData(queryKeys.invoices.detail(id), invoice);
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.lists() });
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+    onError: (err) => {
+      const body =
+        err instanceof ApiError ? (err.body as { error?: string } | null) : null;
+      toast.error(body?.error ?? "Invoice could not be reopened.");
+    },
+  });
+}
+
 // Storno: issues a reversing Cancellation invoice and sets the original to
 // Cancelled. Returns the Stornorechnung.
 export function useCancelInvoice() {
