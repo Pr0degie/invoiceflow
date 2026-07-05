@@ -69,21 +69,56 @@ All three funnel through `signOutOnAuthError()`
 
 ## Register flow
 
+Registration **no longer logs the user in** (the backend keeps new accounts
+unverified and login on them returns `403 email_not_verified`).
+
 ```
 RegisterForm (client)
   → POST /api/auth/register (Next.js API route in src/app/api/auth/register/route.ts)
   → apiClient.POST("/api/auth/register") → invoice-api
-  → 201 → redirect to /auth/login?registered=true
+  → 201 → redirect to /auth/check-email?email=… (offers "resend", 60 s cooldown)
 ```
 
 No Prisma user creation. invoice-api owns the user store.
 
-> **⚠ Changing in Session 18b.** The backend (Prompt 18a) now returns `201 { message }`
-> with **no session**, requires e-mail verification before login (`403 email_not_verified`),
-> and adds password-reset / verify-email / resend-verification endpoints. This section
-> describes the *current* frontend, which still assumes the old flow. Rebuild the register
-> → verify → login flow (plus forgot/reset-password pages) per `docs/api-contract.md`
-> and update this doc then.
+---
+
+## E-mail verification & password reset flows (Prompt 18b)
+
+All four anonymous flows have UI. The two token-landing pages live at the
+**root** (`/verify-email`, `/reset-password`) — not under `/auth` — because the
+backend e-mails link to `{FRONTEND_BASE_URL}/verify-email?token=…` and
+`/reset-password?token=…` with no `/auth` segment and no locale prefix.
+
+| Flow | Page | Proxy route | Backend endpoint |
+|---|---|---|---|
+| Forgot password | `/auth/forgot-password` | `POST /api/auth/forgot-password` | `POST /auth/forgot-password` |
+| Reset password | `/reset-password?token=` | `POST /api/auth/reset-password` | `POST /auth/reset-password` |
+| Verify e-mail | `/verify-email?token=` | `POST /api/auth/verify-email` | `POST /auth/verify-email` |
+| Resend verification | (shared component) | `POST /api/auth/resend-verification` | `POST /auth/resend-verification` |
+| Check inbox (post-register) | `/auth/check-email?email=` | — | — |
+
+**Anti-enumeration:** the `forgot-password` and `resend-verification` proxy routes
+collapse every non-`429` outcome (including transport errors) to a generic
+`200 { success: true }`, and the forms show one fixed confirmation regardless of
+whether the address exists. Never add a "no such account" branch here.
+
+**Login `403 email_not_verified`:** `authorize()` in `src/lib/auth.ts` throws
+`EmailNotVerifiedError extends CredentialsSignin` with `code =
+"email_not_verified"` on a `403`. Auth.js writes that `code` into the sign-in
+redirect URL, and `signIn(..., { redirect: false })` returns it as `res.code`.
+`LoginForm` reads `res.code` to show a "verify first" message + inline resend
+instead of the generic "wrong password". Every other failure stays `null` →
+generic (no leak).
+
+**Note (types):** the four proxy routes call the backend via
+`src/lib/api/backend-fetch.ts` (plain `fetch`) rather than the typed `apiClient`,
+because the committed `openapi.json` predates these endpoints. Regenerate with
+`npm run api:types` (backend must be running) and they can migrate to `apiClient`.
+
+Shared resend UI: `src/components/auth/resend-verification.tsx` (60 s cooldown;
+takes a fixed `email` prop, or renders an e-mail field when the address is
+unknown, e.g. on the verify-email error state).
 
 ---
 
@@ -121,6 +156,9 @@ The `bearerHeader()` helper returns `{}` if token is undefined — safe to call 
 | `src/lib/api/client.ts` | `apiClient` + `bearerHeader()` |
 | `src/types/next-auth.d.ts` | Type extensions: `session.accessToken`, `session.error`, JWT fields |
 | `src/app/api/auth/register/route.ts` | Register proxy route |
+| `src/app/api/auth/{forgot-password,reset-password,verify-email,resend-verification}/route.ts` | Anonymous auth proxy routes (Prompt 18b) |
+| `src/lib/api/backend-fetch.ts` | Server-only `fetch` helper for the not-yet-typed 18b endpoints |
+| `src/components/auth/{forgot-password-form,reset-password-form,verify-email-client,check-email-client,resend-verification}.tsx` | 18b flow UI |
 | `src/lib/auth/sign-out-on-auth-error.ts` | Deduped global signout on dead sessions |
 | `src/components/providers/session-guard.tsx` | Client watcher for `session.error` |
 
@@ -142,7 +180,7 @@ session.error            // "RefreshAccessTokenError" | undefined
 
 - No GitHub / Google OAuth
 - No magic links
-- No password reset (not implemented — ask before adding)
+- Password reset **is** implemented (Prompt 18b) — see the flows section above
 - No database adapter — sessions are pure JWT; invoice-api owns the user store.
   Prisma was removed entirely (it broke the Edge middleware and did nothing for
   Credentials logins with JWT session strategy)

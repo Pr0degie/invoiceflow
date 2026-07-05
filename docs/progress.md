@@ -4,6 +4,69 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — Password reset & e-mail verification UI — Prompt 18b
+
+Frontend for the flows the backend gained in 18a. Reuses the existing auth
+form/page patterns (AuthLayout, inline `Alert`, shadcn `Input`/`Button`) — no new
+abstractions, no redesign.
+
+**Pages (new):**
+- `/auth/forgot-password` — e-mail field; after submit **always** the same neutral
+  confirmation, no known/unknown branch (anti-enumeration).
+- `/reset-password?token=…` — **root-level**, matches the backend's e-mail link
+  (`{FRONTEND_BASE_URL}/reset-password`). New password + repeat, register-grade
+  client validation. Success → banner + redirect to `/auth/login?reset=true`.
+  Missing/expired/used token → clear message + link back to forgot-password.
+- `/verify-email?token=…` — **root-level**, matches the backend link. Redeems the
+  token on load (StrictMode-guarded, single-use). Success → login link; failure →
+  resend form.
+- `/auth/check-email?email=…` — post-register "confirm your inbox" screen with a
+  resend button (60 s cooldown).
+
+**Changed:** register no longer auto-logs-in (would 403) → routes to
+`/auth/check-email`. Login distinguishes **403 `email_not_verified`** from bad
+credentials via a `CredentialsSignin` subclass whose `code` reaches the client as
+`res.code`; on that path it shows a "verify first" message + inline resend.
+"Forgot password?" is now a real link.
+
+**API proxy routes (new, mirror `register/route.ts`):** `forgot-password`,
+`reset-password`, `verify-email`, `resend-verification` under
+`src/app/api/auth/*`. forgot/resend collapse every non-429 outcome to a generic
+`200` so neither the happy path nor a transport error can leak account state.
+These call the backend via a small `backendFetch` helper (plain `fetch`) instead
+of the typed `apiClient`, because the committed `openapi.json` predates 18a and
+the backend can't be reached from this box to regenerate — **once the spec is
+regenerated (`npm run api:types`) they can move onto `apiClient`.**
+
+**i18n:** all new copy in `de` (reference) + `en`, formal "Sie" to match existing
+auth strings. New namespaces `auth.{forgotPasswordPage,resetPasswordPage,
+verifyEmailPage,checkEmailPage,resend}` + `auth.errors.emailNotVerified` +
+`auth.signIn.passwordResetDone`.
+
+**Verified:** `npm run build` green (all 6 new routes registered), `npx tsc
+--noEmit` clean, `npm run lint` clean. Dev server: all pages render 200 in `en`
+and `de` with the expected copy; API routes exercised without a backend —
+forgot/resend → `200 {success}` (generic), bad e-mail → `400`, short password →
+`400`, missing token → `400`. Traced the NextAuth internals to confirm a
+`CredentialsSignin.code` is propagated into the redirect URL and surfaced as
+`res.code` (`@auth/core` index.js L133-134 + `next-auth/react.js` L175).
+
+**NOT run here (environment gaps, not code gaps):**
+- **Live end-to-end against invoice-api** — the backend isn't running on this
+  machine (port 5432 is held by another project's Docker stack; see auto-memory).
+  Reset/verify against a live backend would return `204`/`400`; without one they
+  correctly fall to `500`. Copy the links from the backend's `LogEmailSender`
+  output to run the four flows manually once the backend is up.
+- **Playwright screenshots (§5)** — the Playwright MCP wasn't available in the
+  session. The pages reuse existing auth layout/components, so no new visual
+  surface; still, a 1440/375 + dark-mode pass is owed before this is truly done.
+- Note: the backend e-mail links carry **no locale prefix**, so with
+  `localePrefix: "as-needed"` they resolve to the default `en` locale even for
+  German users. If German landing pages are wanted, the backend must include the
+  locale in `FRONTEND_BASE_URL` links (frontend can't fix this alone).
+
+---
+
 ## 2026-07-05 — Password reset & e-mail verification — Prompt 18a
 
 Backend-only (invoice-api); the frontend flow follows in Session 18b against the
