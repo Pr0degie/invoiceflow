@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { forgotPasswordSchema } from "@/lib/schemas/auth";
-import { backendFetch } from "@/lib/api/backend-fetch";
+import { apiClient } from "@/lib/api/client";
 
 // Anti-enumeration: this route NEVER reveals whether the address exists.
 // The backend already answers 200 with a generic message for known and unknown
@@ -18,11 +18,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const res = await backendFetch("/api/auth/forgot-password", {
-      email: parsed.data.email,
+    const { response } = await apiClient.POST("/api/auth/forgot-password", {
+      body: { email: parsed.data.email, locale: parsed.data.locale },
     });
 
-    if (res.status === 429) {
+    if (response.status === 429) {
       return NextResponse.json({ error: "rate_limited" }, { status: 429 });
     }
 

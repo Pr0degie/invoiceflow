@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ export function RegisterForm() {
   type FormErrors = Partial<Record<keyof z.infer<typeof schema>, string>>;
 
   const router = useRouter();
+  const locale = useLocale();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -81,6 +82,7 @@ export function RegisterForm() {
         name: form.name,
         email: form.email,
         password: form.password,
+        locale,
       }),
     });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resendVerificationSchema } from "@/lib/schemas/auth";
-import { backendFetch } from "@/lib/api/backend-fetch";
+import { apiClient } from "@/lib/api/client";
 
 // Anti-enumeration mirror (same reasoning as forgot-password): the backend
 // always answers 200 with a generic message whether or not the address exists
@@ -17,11 +17,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const res = await backendFetch("/api/auth/resend-verification", {
-      email: parsed.data.email,
+    const { response } = await apiClient.POST("/api/auth/resend-verification", {
+      body: { email: parsed.data.email, locale: parsed.data.locale },
     });
 
-    if (res.status === 429) {
+    if (response.status === 429) {
       return NextResponse.json({ error: "rate_limited" }, { status: 429 });
     }
 

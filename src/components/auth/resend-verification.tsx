@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { z } from "zod";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface Props {
 export function ResendVerification({ email }: Props) {
   const t = useTranslations("auth.resend");
   const tErr = useTranslations("auth.errors");
+  const locale = useLocale();
 
   const [inputEmail, setInputEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -64,7 +65,7 @@ export function ResendVerification({ email }: Props) {
       const res = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: target }),
+        body: JSON.stringify({ email: target, locale }),
       });
 
       if (res.status === 429) {

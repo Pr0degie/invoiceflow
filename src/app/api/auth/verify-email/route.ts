@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyEmailSchema } from "@/lib/schemas/auth";
-import { backendFetch } from "@/lib/api/backend-fetch";
+import { apiClient } from "@/lib/api/client";
 
 // Consumes the verification token. Distinct outcomes are intentional here —
 // the token is opaque, so success/failure reveals nothing about which address
@@ -17,16 +17,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const res = await backendFetch("/api/auth/verify-email", {
-      token: parsed.data.token,
+    const { response } = await apiClient.POST("/api/auth/verify-email", {
+      body: { token: parsed.data.token },
     });
 
-    if (res.ok) {
+    if (response.ok) {
       // 204 No Content on success.
       return NextResponse.json({ success: true }, { status: 200 });
     }
 
-    if (res.status === 429) {
+    if (response.status === 429) {
       return NextResponse.json({ error: "rate_limited" }, { status: 429 });
     }
 
