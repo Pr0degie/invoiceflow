@@ -1,8 +1,18 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
 import { refreshAccessToken } from "@/lib/auth/refresh";
+
+/**
+ * Thrown when the backend rejects login with 403 `email_not_verified`. The
+ * `code` is propagated into the sign-in redirect URL and returned to the client
+ * as `res.code`, so the login form can offer "resend verification" instead of
+ * the generic "wrong password" message. See docs/auth.md.
+ */
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "email_not_verified";
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -50,12 +60,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const { data, error } = await apiClient.POST("/api/auth/login", {
-          body: {
-            email: parsed.data.email,
-            password: parsed.data.password,
-          },
-        });
+        const { data, error, response } = await apiClient.POST(
+          "/api/auth/login",
+          {
+            body: {
+              email: parsed.data.email,
+              password: parsed.data.password,
+            },
+          }
+        );
+
+        // 403 = account exists but e-mail not verified — surface distinctly so
+        // the form can offer a resend. All other failures stay generic (null →
+        // "Invalid credentials") to avoid leaking which addresses are registered.
+        if (response.status === 403) throw new EmailNotVerifiedError();
 
         if (error || !data?.token || !data?.user) return null;
 

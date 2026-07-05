@@ -151,7 +151,8 @@
       "submitting": "Wird angemeldet…",
       "noAccount": "Noch kein Konto?",
       "signUpLink": "Registrieren",
-      "accountCreated": "Konto erstellt! Bitte melden Sie sich an."
+      "accountCreated": "Konto erstellt! Bitte melden Sie sich an.",
+      "passwordResetDone": "Passwort geändert. Sie können sich jetzt anmelden."
     },
     "signUp": {
       "title": "Konto erstellen",
@@ -185,7 +186,61 @@
       "passwordsMustMatch": "Passwörter stimmen nicht überein",
       "termsRequired": "Sie müssen die Bedingungen akzeptieren",
       "invalidCredentials": "Ungültige E-Mail oder falsches Passwort. Bitte versuchen Sie es erneut.",
+      "emailNotVerified": "Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse. Neuen Link anfordern?",
       "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    },
+    "forgotPasswordPage": {
+      "title": "Passwort vergessen?",
+      "subtitle": "Wir senden Ihnen einen Link zum Zurücksetzen",
+      "emailLabel": "E-Mail",
+      "submitButton": "Link senden",
+      "submitting": "Wird gesendet…",
+      "sent": "Falls ein Konto mit dieser Adresse existiert, haben wir Ihnen einen Link zum Zurücksetzen geschickt.",
+      "rateLimited": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+      "backToLogin": "Zurück zur Anmeldung"
+    },
+    "resetPasswordPage": {
+      "title": "Neues Passwort festlegen",
+      "subtitle": "Wählen Sie ein neues Passwort für Ihr Konto",
+      "passwordLabel": "Neues Passwort",
+      "passwordPlaceholder": "Min. 8 Zeichen",
+      "confirmLabel": "Passwort wiederholen",
+      "confirmPlaceholder": "Passwort wiederholen",
+      "showPassword": "Passwort anzeigen",
+      "hidePassword": "Passwort verbergen",
+      "submitButton": "Passwort speichern",
+      "submitting": "Wird gespeichert…",
+      "success": "Passwort geändert. Sie werden zur Anmeldung weitergeleitet…",
+      "toLogin": "Zur Anmeldung",
+      "invalidToken": "Dieser Link ist abgelaufen oder wurde bereits verwendet.",
+      "missingToken": "Dieser Link ist ungültig. Bitte fordern Sie einen neuen an.",
+      "requestNew": "Neuen Link anfordern",
+      "rateLimited": "Zu viele Anfragen. Bitte versuchen Sie es später erneut."
+    },
+    "verifyEmailPage": {
+      "title": "E-Mail bestätigen",
+      "subtitle": "Ihre E-Mail-Adresse wird bestätigt",
+      "verifying": "E-Mail wird bestätigt…",
+      "successTitle": "E-Mail bestätigt",
+      "successBody": "Ihr Konto ist jetzt aktiv. Sie können sich anmelden.",
+      "errorTitle": "Bestätigung fehlgeschlagen",
+      "errorBody": "Dieser Link ist abgelaufen oder wurde bereits verwendet. Fordern Sie unten einen neuen an.",
+      "toLogin": "Zur Anmeldung"
+    },
+    "checkEmailPage": {
+      "title": "Bestätigen Sie Ihre E-Mail",
+      "subtitle": "Nur noch ein Schritt bis zu Ihrem Konto",
+      "body": "Wir haben einen Bestätigungslink an {email} geschickt. Öffnen Sie ihn, um Ihr Konto zu aktivieren.",
+      "bodyNoEmail": "Wir haben Ihnen einen Bestätigungslink geschickt. Öffnen Sie ihn, um Ihr Konto zu aktivieren.",
+      "backToLogin": "Zurück zur Anmeldung"
+    },
+    "resend": {
+      "emailLabel": "E-Mail",
+      "button": "Bestätigungs-E-Mail erneut senden",
+      "sending": "Wird gesendet…",
+      "cooldown": "Erneut senden in {seconds}s",
+      "sent": "Falls ein Konto existiert, haben wir Ihnen eine neue E-Mail geschickt.",
+      "rateLimited": "Zu viele Anfragen. Bitte versuchen Sie es später erneut."
     },
     "oauth": {
       "continueWithGitHub": "Mit GitHub fortfahren"
