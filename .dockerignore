@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.github
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore
+.claude
+.agents
+claude-code-starter
+invoiceflow-pack-en
+C?Users*
+docs
+*.md
