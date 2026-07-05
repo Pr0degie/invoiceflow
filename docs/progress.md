@@ -4,6 +4,53 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — Password reset & e-mail verification — Prompt 18a
+
+Backend-only (invoice-api); the frontend flow follows in Session 18b against the
+updated `docs/api-contract.md`. ADR: `../invoice-api/docs/adr/0006-password-reset-and-email-verification.md`.
+
+**Mail:** `IEmailSender` with `SmtpEmailSender` (MailKit, `Email__Smtp*`) and a
+log-only `LogEmailSender` (writes the mail + link to the log). Selected by
+`Email:Provider`; log-only is the default in Development / when SMTP is unset.
+Plain-text German mails, no templates, no queue.
+
+**E-mail verification:** registration now creates the user `EmailVerifiedAt=null`
+and **issues no session** — it returns `201 { message }` and mails a 24 h link.
+`POST /auth/verify-email { token }` redeems it. Unverified login is blocked with
+**`403 email_not_verified`** (a deliberate, documented exception to our
+anti-enumeration rule — the user must understand the problem, and existence is
+already known to whoever holds the password). `POST /auth/resend-verification`
+mirrors forgot-password's anti-enumeration (always generic 200).
+
+**Password reset:** `POST /auth/forgot-password` — always `200`, generic message,
+dummy work on the miss path so neither body nor timing leaks account existence;
+on a hit, mails a 1 h link. `POST /auth/reset-password { token, newPassword }`
+sets the password, consumes the token, and **revokes all refresh tokens**. Login
+also now runs a BCrypt verify against a dummy hash for unknown e-mails (timing).
+
+**Data:** `EmailVerifiedAt` on `User`; one `UserTokens` table (SHA-256-hashed,
+single-use, TTL, `Type` discriminator PasswordReset|EmailVerification), same
+hardening as refresh tokens (ADR 0001). Migration
+`AddEmailVerificationAndUserTokens` **backfills `EmailVerifiedAt = CreatedAt`** for
+existing users (grandfathered — no lock-out); seed users are pre-verified.
+
+**Verified:** `dotnet test` **141 green** (121 → +20: verify happy/expired/
+consumed/wrong-type, resend & forgot known/unknown identical response, reset
+happy/reuse/expired/wrong, refresh-token revocation after reset, login blocked
+unverified → freed after verify). Migration applied on a real Postgres both
+**empty** (fresh apply of all migrations) and **populated** (legacy user →
+`EmailVerifiedAt` backfilled to `CreatedAt`; `UserTokens` + indexes + cascade FK
+created). Full flow driven over HTTP: register→201, login-unverified→403, verify→
+204, login→200, forgot→200, reset→204, old-pw→401, new-pw→200, reused-token→400,
+rate-limit→429.
+
+**Open / follow-up:** MailKit 4.8.0 carries a moderate advisory
+(GHSA-9j88-vvj5-vhgr) — bump to ≥4.9.0 when convenient (left as-is to keep this
+change scoped). No SMTP wired in prod yet — set `Email__Provider=Smtp` + creds +
+`FRONTEND_BASE_URL` on Railway before the reset/verify mails go out for real.
+
+---
+
 ## 2026-07-04 — E-Rechnung (XRechnung / EN 16931) — Prompt 13
 
 Cross-repo. Every finalized invoice now emits a legally binding German
