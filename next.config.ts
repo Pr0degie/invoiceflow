@@ -17,6 +17,9 @@ const isDev = process.env.NODE_ENV === "development";
 // - style-src 'unsafe-inline': Radix primitives, recharts and motion set
 //   style="" attributes; next-themes toggles inline styles on theme switch.
 // - img-src blob: data:: generated favicon/OG images and object URLs.
+// - frame-src blob:: the invoice PDF preview dialog renders the fetched PDF
+//   blob (object URL) in an iframe; without this it falls back to
+//   default-src 'self', which excludes blob:.
 // - connect-src ws: (dev only): HMR websocket.
 // - frame-ancestors 'none' mirrors X-Frame-Options: DENY for modern browsers.
 const csp = [
@@ -26,6 +29,7 @@ const csp = [
   "img-src 'self' blob: data:",
   "font-src 'self' data:",
   `connect-src 'self'${isDev ? " ws:" : ""}`,
+  "frame-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

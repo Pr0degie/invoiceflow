@@ -268,6 +268,7 @@
     "actions": {
       "openMenu": "Open menu",
       "view": "View",
+      "previewPdf": "Preview PDF",
       "downloadPdf": "Download PDF",
       "downloadXml": "E-Rechnung (XML)",
       "markAsPaid": "Mark as paid",
@@ -459,6 +460,11 @@
       "smallBusinessTaxNote": "0% — § 19 UStG small business"
     },
     "draftNumber": "Draft",
+    "preview": {
+      "title": "PDF preview — {number}",
+      "loading": "Loading PDF…",
+      "error": "PDF preview could not be loaded."
+    },
     "reopen": {
       "title": "Reopen invoice {number}?",
       "description": "This lifts the legal fixation (GoBD): the invoice returns to draft and becomes editable again. It keeps its invoice number — finalizing it again reuses the same number and replaces the archived PDF. The reopening is recorded in the audit trail.",
