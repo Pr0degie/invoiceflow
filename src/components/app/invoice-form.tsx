@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback, useState } from "react";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import { useForm, useFieldArray, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -262,7 +262,9 @@ function InvoiceForm(props: Props) {
     finalizeInvoice.isPending;
 
   const form = useForm<InvoiceFormValues>({
-    resolver: zodResolver(invoiceFormSchema),
+    // zodResolver's inferred generics diverge from InvoiceFormValues under
+    // Zod 4 (z.coerce splits input/output types); the runtime output matches.
+    resolver: zodResolver(invoiceFormSchema) as unknown as Resolver<InvoiceFormValues>,
     defaultValues:
       mode === "edit" ? mapInvoiceToForm(invoice!) : getCreateDefaults(defaults),
     mode: "onBlur",
