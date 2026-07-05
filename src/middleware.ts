@@ -35,5 +35,10 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Exclude Next.js file-based metadata routes (icon/apple-icon/opengraph-image
+  // generate extension-less URLs like /icon) so auth+intl don't redirect them —
+  // otherwise the browser tab icon request bounces to /auth/login instead of the PNG.
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|icon|apple-icon|opengraph-image|sitemap.xml|robots.txt).*)",
+  ],
 };
