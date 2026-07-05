@@ -151,7 +151,8 @@
       "submitting": "Signing in…",
       "noAccount": "Don't have an account?",
       "signUpLink": "Sign up",
-      "accountCreated": "Account created! Sign in to continue."
+      "accountCreated": "Account created! Sign in to continue.",
+      "passwordResetDone": "Password changed. You can sign in now."
     },
     "signUp": {
       "title": "Create an account",
@@ -185,7 +186,61 @@
       "passwordsMustMatch": "Passwords do not match",
       "termsRequired": "You must accept the terms",
       "invalidCredentials": "Invalid email or password. Please try again.",
+      "emailNotVerified": "Please verify your email address before signing in. Need a new link?",
       "generic": "Something went wrong. Please try again."
+    },
+    "forgotPasswordPage": {
+      "title": "Forgot your password?",
+      "subtitle": "We'll email you a reset link",
+      "emailLabel": "Email",
+      "submitButton": "Send reset link",
+      "submitting": "Sending…",
+      "sent": "If an account exists for that address, we've sent it a link to reset the password.",
+      "rateLimited": "Too many requests. Please try again later.",
+      "backToLogin": "Back to sign in"
+    },
+    "resetPasswordPage": {
+      "title": "Set a new password",
+      "subtitle": "Choose a new password for your account",
+      "passwordLabel": "New password",
+      "passwordPlaceholder": "Min. 8 characters",
+      "confirmLabel": "Repeat password",
+      "confirmPlaceholder": "Repeat password",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "submitButton": "Save password",
+      "submitting": "Saving…",
+      "success": "Password changed. Redirecting you to sign in…",
+      "toLogin": "Go to sign in",
+      "invalidToken": "This link has expired or was already used.",
+      "missingToken": "This link is invalid. Please request a new one.",
+      "requestNew": "Request a new link",
+      "rateLimited": "Too many requests. Please try again later."
+    },
+    "verifyEmailPage": {
+      "title": "Verify email",
+      "subtitle": "Confirming your email address",
+      "verifying": "Verifying your email…",
+      "successTitle": "Email verified",
+      "successBody": "Your account is now active. You can sign in.",
+      "errorTitle": "Verification failed",
+      "errorBody": "This link has expired or was already used. Request a new one below.",
+      "toLogin": "Go to sign in"
+    },
+    "checkEmailPage": {
+      "title": "Confirm your email",
+      "subtitle": "One more step to activate your account",
+      "body": "We've sent a confirmation link to {email}. Open it to activate your account.",
+      "bodyNoEmail": "We've sent you a confirmation link. Open it to activate your account.",
+      "backToLogin": "Back to sign in"
+    },
+    "resend": {
+      "emailLabel": "Email",
+      "button": "Resend confirmation email",
+      "sending": "Sending…",
+      "cooldown": "Resend in {seconds}s",
+      "sent": "If an account exists, we've sent a new email.",
+      "rateLimited": "Too many requests. Please try again later."
     },
     "oauth": {
       "continueWithGitHub": "Continue with GitHub"

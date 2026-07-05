@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ResendVerification } from "@/components/auth/resend-verification";
 
 export function LoginForm() {
   const t = useTranslations("auth.signIn");
@@ -27,11 +28,15 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const registered = searchParams.get("registered") === "true";
+  const passwordReset = searchParams.get("reset") === "true";
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState("");
+  // Set when the backend answers 403 email_not_verified — swaps the generic
+  // error for a "verify first" message plus a resend action.
+  const [unverified, setUnverified] = useState(false);
   const [loading, setLoading] = useState(false);
 
   function setField<K extends keyof typeof form>(key: K, value: string) {
@@ -42,6 +47,7 @@ export function LoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setServerError("");
+    setUnverified(false);
 
     const result = schema.safeParse(form);
     if (!result.success) {
@@ -63,7 +69,12 @@ export function LoginForm() {
     setLoading(false);
 
     if (res?.error) {
-      setServerError(tErr("invalidCredentials"));
+      // `code` is set from EmailNotVerifiedError thrown in authorize().
+      if (res.code === "email_not_verified") {
+        setUnverified(true);
+      } else {
+        setServerError(tErr("invalidCredentials"));
+      }
       return;
     }
 
@@ -72,9 +83,15 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      {registered && !serverError && (
+      {registered && !serverError && !unverified && (
         <Alert className="mb-5 border-primary/30 bg-primary/5 text-primary [&>svg]:text-primary">
           <AlertDescription>{t("accountCreated")}</AlertDescription>
+        </Alert>
+      )}
+
+      {passwordReset && !serverError && !unverified && (
+        <Alert className="mb-5 border-primary/30 bg-primary/5 text-primary [&>svg]:text-primary">
+          <AlertDescription>{t("passwordResetDone")}</AlertDescription>
         </Alert>
       )}
 
@@ -82,6 +99,15 @@ export function LoginForm() {
         <Alert variant="destructive" className="mb-5">
           <AlertDescription>{serverError}</AlertDescription>
         </Alert>
+      )}
+
+      {unverified && (
+        <div className="mb-5 space-y-3">
+          <Alert variant="destructive">
+            <AlertDescription>{tErr("emailNotVerified")}</AlertDescription>
+          </Alert>
+          <ResendVerification email={form.email} />
+        </div>
       )}
 
       {/* Fields */}
@@ -109,13 +135,12 @@ export function LoginForm() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">{t("passwordLabel")}</Label>
-            <button
-              type="button"
+            <Link
+              href="/auth/forgot-password"
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-              tabIndex={-1}
             >
               {t("forgotPassword")}
-            </button>
+            </Link>
           </div>
           <div className="relative">
             <Input

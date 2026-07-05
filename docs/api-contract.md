@@ -36,17 +36,65 @@ which injects it server-side. See `docs/auth.md`.
 ## Auth Endpoints
 
 ```
-POST   /api/auth/register         { name, email, password } → AuthResponse
-POST   /api/auth/login            { email, password }        → AuthResponse
-POST   /api/auth/refresh          { refreshToken }           → AuthResponse
-GET    /api/auth/me                                          → UserDto
-PATCH  /api/auth/me               (any subset of UserDto's editable fields) → UserDto
-DELETE /api/auth/me                                          → 204   (deletes the account)
-POST   /api/auth/change-password  { currentPassword, newPassword } → 204
-POST   /api/auth/logout           { refreshToken }           → 204
+POST   /api/auth/register              { name, email, password, locale? } → 201 MessageResponse  (NO session — see below)
+POST   /api/auth/login                 { email, password }               → AuthResponse | 403 email_not_verified
+POST   /api/auth/refresh               { refreshToken }                  → AuthResponse
+POST   /api/auth/forgot-password       { email, locale? }                → 200 MessageResponse   (always, generic)
+POST   /api/auth/reset-password        { token, newPassword }            → 204
+POST   /api/auth/verify-email          { token }                         → 204
+POST   /api/auth/resend-verification   { email, locale? }                → 200 MessageResponse   (always, generic)
+GET    /api/auth/me                                                      → UserDto
+PATCH  /api/auth/me                    (any subset of UserDto's editable fields) → UserDto
+DELETE /api/auth/me                                                      → 204   (deletes the account)
+POST   /api/auth/change-password       { currentPassword, newPassword }  → 204
+POST   /api/auth/logout                { refreshToken }                  → 204
 ```
 
 `AuthResponse`: `{ token, refreshToken, expiresAt, user: UserDto }`
+`MessageResponse`: `{ message: string }` (German, human-readable — safe to show as-is)
+
+### Registration & e-mail verification (changed in Prompt 18a)
+
+**Registration no longer logs the user in.** `POST /register` creates an
+*unverified* account, e-mails a verification link, and returns `201 { message }`
+— **no token, no session**. Flow the frontend must implement:
+
+1. `register` → show a "check your inbox" screen (offer *resend*).
+2. The e-mail links to `{FRONTEND_BASE_URL}/verify-email?token=…`. That page
+   calls `POST /verify-email { token }` → `204`, then routes to login.
+3. `POST /login` on an unverified account returns **`403 { "error": "email_not_verified" }`**
+   — surface a clear "please verify first" message with a resend action.
+   (All other bad logins stay `401 { "error": "Invalid credentials." }`.)
+
+- `register` on a duplicate e-mail → `409 { error }` (unchanged).
+- `POST /resend-verification { email }` → always `200` with the **same generic
+  message** whether or not the address exists / is already verified. Never reveals
+  account state.
+
+**`locale` (optional, Prompt 18c)** — `register`, `forgot-password` and
+`resend-verification` accept a `locale` of `"de"` or `"en"`. It (a) picks the
+language of the mail and (b) is embedded as an explicit path segment in the link:
+`{FRONTEND_BASE_URL}/{locale}/verify-email?token=…` and
+`…/{locale}/reset-password?token=…` — **always prefixed, even for the default
+locale**. Anything other than `de`/`en` (or omitting the field) falls back to
+`de`. Send the active next-intl locale (`useLocale()` / server equivalent). The
+backend normalizes against the allowlist, so an unexpected value is harmless.
+
+### Password reset (new in Prompt 18a)
+
+1. `POST /forgot-password { email }` → **always** `200` with a generic message
+   (identical for known/unknown addresses — no enumeration, no timing tell). If
+   the account exists, an e-mail links to `{FRONTEND_BASE_URL}/reset-password?token=…`.
+2. That page collects a new password and calls `POST /reset-password { token, newPassword }`
+   → `204`. `newPassword` has the same rule as register (**min 8, max 128 chars** —
+   BCrypt only evaluates the first 72 bytes; the cap applies to register and
+   change-password too).
+3. On success **all refresh tokens are revoked** — any other active session is
+   logged out. The frontend should route to login afterwards.
+
+- Reset/verify tokens are single-use and time-boxed (**reset 1 h, verify 24 h**).
+  A used, expired, wrong, or superseded token → `400 { "error": "invalid_or_expired_token" }`.
+  Requesting a new link invalidates the previous one.
 
 ```typescript
 interface UserDto {
@@ -78,9 +126,10 @@ IBAN is normalized (spaces stripped, uppercased) and format-validated → 400.
 Refresh tokens are single-use (rotated on every refresh) with a **60 s grace
 window**: re-sending a token rotated <60 s ago returns the *same* successor
 tokens (concurrent-refresh safe). Reuse **after** 60 s revokes all of the
-user's refresh tokens (theft signal) → 401. `register`, `login`, `refresh`,
-`logout`, and `change-password` are rate-limited per IP (5/min) → 429 when
-exceeded.
+user's refresh tokens (theft signal) → 401. All `/api/auth/*` write endpoints —
+`register`, `login`, `refresh`, `logout`, `change-password`, `forgot-password`,
+`reset-password`, `verify-email`, `resend-verification` — are rate-limited per IP
+(5/min) → 429 when exceeded.
 
 ---
 

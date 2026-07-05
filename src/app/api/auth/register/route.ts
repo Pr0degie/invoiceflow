@@ -14,10 +14,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, locale } = parsed.data;
 
     const { error, response } = await apiClient.POST("/api/auth/register", {
-      body: { name, email, password },
+      body: { name, email, password, locale },
     });
 
     if (error) {

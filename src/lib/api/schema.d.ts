@@ -34,7 +34,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["AuthResponseDto"];
+                        "application/json": components["schemas"]["MessageResponseDto"];
                     };
                 };
                 /** @description Bad Request */
@@ -103,6 +103,193 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ForgotPasswordDto"];
+                    "text/json": components["schemas"]["ForgotPasswordDto"];
+                    "application/*+json": components["schemas"]["ForgotPasswordDto"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MessageResponseDto"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResetPasswordDto"];
+                    "text/json": components["schemas"]["ResetPasswordDto"];
+                    "application/*+json": components["schemas"]["ResetPasswordDto"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VerifyEmailDto"];
+                    "text/json": components["schemas"]["VerifyEmailDto"];
+                    "application/*+json": components["schemas"]["VerifyEmailDto"];
+                };
+            };
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResendVerificationDto"];
+                    "text/json": components["schemas"]["ResendVerificationDto"];
+                    "application/*+json": components["schemas"]["ResendVerificationDto"];
+                };
+            };
+            responses: {
+                /** @description Success */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MessageResponseDto"];
                     };
                 };
             };
@@ -1067,6 +1254,10 @@ export interface components {
             /** Format: date */
             issueDate?: string | null;
         };
+        ForgotPasswordDto: {
+            email?: string | null;
+            locale?: string | null;
+        };
         InvoiceResponse: {
             /** Format: uuid */
             id?: string;
@@ -1141,6 +1332,9 @@ export interface components {
             email?: string | null;
             password?: string | null;
         };
+        MessageResponseDto: {
+            message?: string | null;
+        };
         MonthlyRevenueDto: {
             month?: string | null;
             /** Format: double */
@@ -1165,6 +1359,15 @@ export interface components {
             email?: string | null;
             password?: string | null;
             name?: string | null;
+            locale?: string | null;
+        };
+        ResendVerificationDto: {
+            email?: string | null;
+            locale?: string | null;
+        };
+        ResetPasswordDto: {
+            token?: string | null;
+            newPassword?: string | null;
         };
         StatsDto: {
             /** Format: double */
@@ -1230,6 +1433,9 @@ export interface components {
             iban?: string | null;
             bic?: string | null;
             bankName?: string | null;
+        };
+        VerifyEmailDto: {
+            token?: string | null;
         };
     };
     responses: never;

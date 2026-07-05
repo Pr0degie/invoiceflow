@@ -1,60 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-export function RegisterForm() {
-  const t = useTranslations("auth.signUp");
+export function ResetPasswordForm() {
+  const t = useTranslations("auth.resetPasswordPage");
   const tErr = useTranslations("auth.errors");
 
+  // Client-side password rules mirror register (backend enforces min 8).
   const schema = z
     .object({
-      name: z.string().min(1, tErr("nameRequired")),
-      email: z.string().email(tErr("invalidEmail")),
       password: z
         .string()
         .min(8, tErr("passwordMinLength"))
         .regex(/[a-zA-Z]/, tErr("passwordNeedsLetter"))
         .regex(/[0-9]/, tErr("passwordNeedsNumber")),
       confirmPassword: z.string(),
-      terms: z
-        .boolean()
-        .refine((v) => v === true, tErr("termsRequired")),
     })
     .refine((d) => d.password === d.confirmPassword, {
       message: tErr("passwordsMustMatch"),
       path: ["confirmPassword"],
     });
 
-  type FormErrors = Partial<Record<keyof z.infer<typeof schema>, string>>;
+  type FormErrors = Partial<Record<"password" | "confirmPassword", string>>;
 
   const router = useRouter();
-  const locale = useLocale();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    terms: false,
-  });
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? "";
+
+  const [form, setForm] = useState({ password: "", confirmPassword: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState("");
+  const [tokenDead, setTokenDead] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
-  function setField<K extends keyof typeof form>(
-    key: K,
-    value: (typeof form)[K]
-  ) {
+  useEffect(() => {
+    if (!done) return;
+    const id = setTimeout(() => router.push("/auth/login?reset=true"), 2500);
+    return () => clearTimeout(id);
+  }, [done, router]);
+
+  function setField(key: "password" | "confirmPassword", value: string) {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
   }
@@ -75,28 +72,62 @@ export function RegisterForm() {
     }
 
     setLoading(true);
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        locale,
-      }),
-    });
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, newPassword: form.password }),
+      });
 
-    const data = await res.json();
-    setLoading(false);
-
-    if (!res.ok) {
-      setServerError(data.error ?? tErr("generic"));
-      return;
+      if (res.ok) {
+        setDone(true);
+        return;
+      }
+      if (res.status === 429) {
+        setServerError(t("rateLimited"));
+        return;
+      }
+      // 400 invalid_or_expired_token
+      setTokenDead(true);
+    } catch {
+      setServerError(tErr("generic"));
+    } finally {
+      setLoading(false);
     }
+  }
 
-    // Registration no longer logs in (backend returns 403 until verified).
-    // Send the user to "check your inbox" with a resend option.
-    router.push(`/auth/check-email?email=${encodeURIComponent(form.email)}`);
+  // No token in the URL, or the backend rejected it → dead-end with a way back.
+  if (!token || tokenDead) {
+    return (
+      <div className="space-y-5">
+        <Alert variant="destructive">
+          <AlertDescription>
+            {token ? t("invalidToken") : t("missingToken")}
+          </AlertDescription>
+        </Alert>
+        <Button asChild variant="outline" className="w-full h-10">
+          <Link href="/auth/forgot-password">{t("requestNew")}</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (done) {
+    return (
+      <div className="space-y-5">
+        <Alert className="border-primary/30 bg-primary/5 text-primary [&>svg]:text-primary">
+          <AlertDescription>{t("success")}</AlertDescription>
+        </Alert>
+        <p className="text-center text-sm text-muted-foreground">
+          <Link
+            href="/auth/login"
+            className="text-foreground font-medium hover:text-primary transition-colors underline underline-offset-2"
+          >
+            {t("toLogin")}
+          </Link>
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -107,46 +138,8 @@ export function RegisterForm() {
         </Alert>
       )}
 
-      {/* Fields */}
       <div className="space-y-4">
-        {/* Name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="name">{t("nameLabel")}</Label>
-          <Input
-            id="name"
-            placeholder={t("namePlaceholder")}
-            value={form.name}
-            onChange={(e) => setField("name", e.target.value)}
-            autoComplete="name"
-            className="h-10"
-            aria-invalid={!!errors.name}
-            disabled={loading}
-          />
-          {errors.name && (
-            <p className="text-xs text-destructive">{errors.name}</p>
-          )}
-        </div>
-
-        {/* Email */}
-        <div className="space-y-1.5">
-          <Label htmlFor="email">{t("emailLabel")}</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            value={form.email}
-            onChange={(e) => setField("email", e.target.value)}
-            autoComplete="email"
-            className="h-10"
-            aria-invalid={!!errors.email}
-            disabled={loading}
-          />
-          {errors.email && (
-            <p className="text-xs text-destructive">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Password */}
+        {/* New password */}
         <div className="space-y-1.5">
           <Label htmlFor="password">{t("passwordLabel")}</Label>
           <div className="relative">
@@ -179,14 +172,14 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Confirm Password */}
+        {/* Confirm */}
         <div className="space-y-1.5">
-          <Label htmlFor="confirmPassword">{t("confirmPasswordLabel")}</Label>
+          <Label htmlFor="confirmPassword">{t("confirmLabel")}</Label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirm ? "text" : "password"}
-              placeholder={t("confirmPasswordPlaceholder")}
+              placeholder={t("confirmPlaceholder")}
               value={form.confirmPassword}
               onChange={(e) => setField("confirmPassword", e.target.value)}
               autoComplete="new-password"
@@ -211,63 +204,12 @@ export function RegisterForm() {
             <p className="text-xs text-destructive">{errors.confirmPassword}</p>
           )}
         </div>
-
-        {/* Terms */}
-        <div className="space-y-1.5">
-          <div className="flex items-start gap-2.5">
-            <Checkbox
-              id="terms"
-              checked={form.terms}
-              onCheckedChange={(v) => setField("terms", v === true)}
-              disabled={loading}
-              className="mt-0.5"
-            />
-            <label
-              htmlFor="terms"
-              className="text-sm text-muted-foreground leading-snug cursor-pointer"
-            >
-              {t("termsText")}{" "}
-              <Link
-                href="#"
-                className="text-foreground underline underline-offset-2 hover:text-primary transition-colors"
-              >
-                {t("termsLink")}
-              </Link>{" "}
-              {t("andText")}{" "}
-              <Link
-                href="#"
-                className="text-foreground underline underline-offset-2 hover:text-primary transition-colors"
-              >
-                {t("privacyLink")}
-              </Link>
-            </label>
-          </div>
-          {errors.terms && (
-            <p className="text-xs text-destructive">{errors.terms}</p>
-          )}
-        </div>
       </div>
 
-      {/* Submit */}
-      <Button
-        type="submit"
-        className="w-full h-10 mt-5 gap-2"
-        disabled={loading}
-      >
+      <Button type="submit" className="w-full h-10 mt-5 gap-2" disabled={loading}>
         {loading && <Loader2 className="size-4 animate-spin" />}
         {loading ? t("submitting") : t("submitButton")}
       </Button>
-
-      {/* Footer */}
-      <p className="text-center text-sm text-muted-foreground mt-5">
-        {t("hasAccount")}{" "}
-        <Link
-          href="/auth/login"
-          className="text-foreground font-medium hover:text-primary transition-colors underline underline-offset-2"
-        >
-          {t("signInLink")}
-        </Link>
-      </p>
     </form>
   );
 }
