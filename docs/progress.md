@@ -4,6 +4,44 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — Decouple e-mail delivery from the request path (invoice-api)
+
+Closes a timing/robustness gap in the auth mail flows. Sending was inline: with
+real SMTP the hit path blocked on the round-trip while the miss path didn't, so
+**response time was an enumeration oracle** on `forgot-password` /
+`resend-verification`, and a mail-server outage failed an otherwise-fine
+`register`/`reset`. The `ForgotPasswordAsync` dummy-work comment ("burn
+comparable work") oversold what a single `SecureToken.Generate()` could equalize.
+
+**Backend (`../invoice-api`, branch `feature/reset-verification`):**
+- New `IEmailQueue` + `ChannelEmailQueue` (unbounded `System.Threading.Channels`,
+  singleton) and `EmailBackgroundService` (`BackgroundService`, single reader).
+  `AuthService` now depends on `IEmailQueue` and **enqueues** (`Enqueue`,
+  non-blocking) instead of `await`-ing `IEmailSender.SendAsync`; the worker drains
+  the queue, resolves the scoped `IEmailSender` per message, sends, and **logs**
+  delivery failures instead of propagating them. `LogEmailSender` (Dev default)
+  behaviour is unchanged — same message, just delivered one hop later.
+- The `forgot-password` miss-path comment is corrected: the dominant gap (the
+  inline SMTP round-trip) is gone because both paths now just enqueue/skip and
+  return; the dummy generate only keeps the cheap crypto work symmetric.
+- Registered `AddSingleton<IEmailQueue, ChannelEmailQueue>()` +
+  `AddHostedService<EmailBackgroundService>()` in `Program.cs`.
+
+**Tests:** `CapturingEmailSender` → `CapturingEmailQueue` (implements `IEmailQueue`,
+records on enqueue so existing assertions stay synchronous — the switch was a type
+rename, no assertion logic changed). Added `EmailBackgroundServiceTests`: the
+worker drains and delivers via the sender, and a throwing sender is swallowed
+without killing the loop (second message still attempted). `dotnet test`
+**157 green** (155 → +2). Build clean (only the pre-existing MailKit advisory +
+QuestPDF `MinimalBox` deprecation warnings). CLAUDE.md §5 mail note updated.
+
+**Not done:** no retry/backoff or persistence — an unbounded in-process queue is
+right-sized for auth-flow mail volume, but a crash drops undelivered messages
+(acceptable: the user can re-request a link). A durable outbox would be the next
+step if transactional mail is ever added.
+
+---
+
 ## 2026-07-05 — Locale in verification & reset links — Prompt 18c (invoice-api)
 
 Closes the contract gap 18b flagged: mail links had no locale prefix, so with
