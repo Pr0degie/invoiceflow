@@ -78,6 +78,13 @@ RegisterForm (client)
 
 No Prisma user creation. invoice-api owns the user store.
 
+> **⚠ Changing in Session 18b.** The backend (Prompt 18a) now returns `201 { message }`
+> with **no session**, requires e-mail verification before login (`403 email_not_verified`),
+> and adds password-reset / verify-email / resend-verification endpoints. This section
+> describes the *current* frontend, which still assumes the old flow. Rebuild the register
+> → verify → login flow (plus forgot/reset-password pages) per `docs/api-contract.md`
+> and update this doc then.
+
 ---
 
 ## Using the session
