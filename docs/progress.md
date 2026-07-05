@@ -4,6 +4,50 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — PDF preview next to the download — Prompt 17
+
+Frontend only. Invoices (drafts included) can now be previewed in-app without
+downloading — draft previews carry the backend's ENTWURF watermark, finalized
+invoices show the archived PDF; the endpoint distinguishes that itself.
+
+1. **Shared preview** `src/components/app/invoice-pdf-preview.tsx`:
+   `useInvoicePdfPreview()` returns `{ preview(id, number), isPending,
+   dialog }`. It fetches `/api/backend/api/invoices/{id}/pdf` (same
+   cookie-only auth-proxy path as the download in `useInvoices.ts`), wraps
+   the blob in an object URL and shows it in an `<iframe>` inside a ~90 %
+   viewport shadcn `Dialog` (`h-[90vh] w-[92vw]`). Loading spinner while
+   fetching; errors surface via the existing sonner toast pattern; the
+   object URL is revoked in the effect cleanup when the dialog closes
+   (including fetches that resolve after close). No PDF.js — native browser
+   viewer only.
+2. **Mobile fallback**: on small viewports (`max-width: 767px`; iOS Safari
+   renders PDFs in iframes unreliably) the hook skips the dialog and opens
+   the object URL in a new tab. `window.open` runs synchronously in the
+   click handler (popup blockers), the blob URL is set after the fetch and
+   revoked after 60 s.
+3. **Entry points**: "PDF-Vorschau"/"Preview PDF" (`Eye` icon) button in
+   `invoice-detail-view.tsx` next to the PDF download, and a row-menu item
+   in `invoice-row-actions.tsx` (it already had a per-row PDF download) —
+   same component, no duplicate. New `ui/dialog.tsx` (shadcn dialog on the
+   `radix-ui` package, styled like `alert-dialog.tsx`/`sheet.tsx`); i18n
+   keys `invoices.actions.previewPdf` + `invoices.preview.*` in de/en.
+4. **CSP**: `frame-src 'self' blob:` added in `next.config.ts` — without it
+   the blob iframe falls back to `default-src 'self'`, which excludes
+   `blob:`. `object-src` stays `'none'` (preview uses iframe, not embed).
+
+**Verified:** `npm run lint` + `next build` (incl. tsc) green. Browser E2E
+(Playwright chromium, prod server + mock backend + forged session cookie,
+same harness style as Prompt 14): detail button and row-menu item open the
+dialog with an `iframe[src="blob:…"]`, title carries the number, no CSP
+violations; instrumented `URL.create/revokeObjectURL` shows created = revoked
+after Escape-close (no leak); at 375 px no dialog renders and a new tab
+receives the blob URL (headless shell downloads it — no PDF viewer plugin
+there). CSP header on the prod server contains `frame-src 'self' blob:`.
+**Untested** (no real device/backend here): actual PDF paint in the dialog
+and the new-tab viewer on real iOS Safari — eyeball once with the backend up.
+
+---
+
 ## 2026-07-05 — Frontend security: auth proxy + CSP — Prompt 14
 
 Frontend only. The invoice-api access token is no longer reachable from

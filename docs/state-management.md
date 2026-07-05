@@ -56,6 +56,11 @@ Available hooks:
 - `useDownloadInvoicePdf()` — mutation (triggers browser download)
 - `useDownloadInvoiceXml()` — mutation (downloads the E-Rechnung XML; finalized invoices only)
 
+Related, not a query hook: `useInvoicePdfPreview()`
+(`src/components/app/invoice-pdf-preview.tsx`) — in-app PDF preview; same
+`/api/backend/.../pdf` fetch as the download, blob shown in an iframe dialog
+(new tab on small viewports).
+
 ### API client
 
 `src/lib/api/client.ts` — typed with `openapi-fetch` against generated `schema.d.ts`.
