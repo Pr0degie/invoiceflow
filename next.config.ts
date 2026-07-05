@@ -3,9 +3,6 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
-const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
-
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.178.30"],
   experimental: {
@@ -13,14 +10,9 @@ const nextConfig: NextConfig = {
       allowedOrigins: ["localhost:3000"],
     },
   },
-  async rewrites() {
-    return [
-      {
-        source: "/api/backend/:path*",
-        destination: `${apiBaseUrl}/:path*`,
-      },
-    ];
-  },
+  // NOTE: the former `/api/backend/:path*` rewrite is gone — the auth proxy
+  // route handler in src/app/api/backend/[...path]/route.ts serves that path
+  // now and injects the Authorization header server-side.
 };
 
 export default withNextIntl(nextConfig);

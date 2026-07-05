@@ -26,8 +26,6 @@ export function DebugApiClient() {
     if (res?.error) setLoginError("Login failed: " + res.error);
   }
 
-  const token = (session as { accessToken?: string } | null)?.accessToken;
-
   return (
     <div className="space-y-6">
       {/* Session state */}
@@ -37,9 +35,10 @@ export function DebugApiClient() {
         {session?.user && (
           <p className="text-sm">User: {session.user.email}</p>
         )}
-        {token && (
-          <p className="text-xs font-mono break-all text-green-600 dark:text-green-400">
-            Token: {token.slice(0, 40)}…
+        {status === "authenticated" && (
+          <p className="text-xs text-muted-foreground">
+            API token: server-only — injected by the /api/backend auth proxy,
+            never visible to client JS.
           </p>
         )}
         {(session as { error?: string } | null)?.error && (

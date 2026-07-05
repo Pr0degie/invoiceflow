@@ -39,7 +39,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.user.id = token.id as string;
       session.user.role = (token.role as string) ?? "USER";
-      session.accessToken = token.accessToken as string | undefined;
+      // Deliberately NOT exposing token.accessToken on the session: the
+      // invoice-api token stays in the server-only JWT cookie and is attached
+      // by the auth proxy (src/app/api/backend/[...path]/route.ts). XSS
+      // cannot steal what never reaches the client.
       session.error = token.error as "RefreshAccessTokenError" | undefined;
       return session;
     },
