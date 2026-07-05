@@ -32,13 +32,13 @@ Authorization: Bearer <jwt>
 ## Auth Endpoints
 
 ```
-POST   /api/auth/register              { name, email, password }         → 201 MessageResponse   (NO session — see below)
+POST   /api/auth/register              { name, email, password, locale? } → 201 MessageResponse  (NO session — see below)
 POST   /api/auth/login                 { email, password }               → AuthResponse | 403 email_not_verified
 POST   /api/auth/refresh               { refreshToken }                  → AuthResponse
-POST   /api/auth/forgot-password       { email }                         → 200 MessageResponse   (always, generic)
+POST   /api/auth/forgot-password       { email, locale? }                → 200 MessageResponse   (always, generic)
 POST   /api/auth/reset-password        { token, newPassword }            → 204
 POST   /api/auth/verify-email          { token }                         → 204
-POST   /api/auth/resend-verification   { email }                         → 200 MessageResponse   (always, generic)
+POST   /api/auth/resend-verification   { email, locale? }                → 200 MessageResponse   (always, generic)
 GET    /api/auth/me                                                      → UserDto
 PATCH  /api/auth/me                    (any subset of UserDto's editable fields) → UserDto
 DELETE /api/auth/me                                                      → 204   (deletes the account)
@@ -66,6 +66,15 @@ POST   /api/auth/logout                { refreshToken }                  → 204
 - `POST /resend-verification { email }` → always `200` with the **same generic
   message** whether or not the address exists / is already verified. Never reveals
   account state.
+
+**`locale` (optional, Prompt 18c)** — `register`, `forgot-password` and
+`resend-verification` accept a `locale` of `"de"` or `"en"`. It (a) picks the
+language of the mail and (b) is embedded as an explicit path segment in the link:
+`{FRONTEND_BASE_URL}/{locale}/verify-email?token=…` and
+`…/{locale}/reset-password?token=…` — **always prefixed, even for the default
+locale**. Anything other than `de`/`en` (or omitting the field) falls back to
+`de`. Send the active next-intl locale (`useLocale()` / server equivalent). The
+backend normalizes against the allowlist, so an unexpected value is harmless.
 
 ### Password reset (new in Prompt 18a)
 

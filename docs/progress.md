@@ -4,6 +4,35 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — Locale in verification & reset links — Prompt 18c (invoice-api)
+
+Closes the contract gap 18b flagged: mail links had no locale prefix, so with
+next-intl `localePrefix: "as-needed"` German users landed on the English default.
+
+**Backend (`../invoice-api`, branch `feature/reset-verification`):** `register`,
+`forgot-password` and `resend-verification` DTOs gained an optional `locale`.
+`AuthService.NormalizeLocale` collapses it to the allowlist `de`/`en` (else `de`)
+**before** it touches a URL — no free-string passthrough, so no injection vector.
+Links are now always explicitly prefixed
+(`{FRONTEND_BASE_URL}/{locale}/verify-email?token=…`, likewise `/reset-password`),
+and both mails' subject + body follow the locale (de/en, same plain-text style).
+Controller unchanged (DTOs bind straight from the body). `dotnet test` **155
+green** (141 → +14: link carries requested locale, en/de subjects, missing/unknown
+→ de fallback, four URL-injection payloads all fall back to `/de/` with no
+payload in the body, forgot/resend localized). Documented in the invoice-api
+README auth section.
+
+**Contract:** `docs/api-contract.md` here (the file the frontend works from) now
+lists `locale?` on the three endpoints and documents the always-prefixed link
+format + allowlist/fallback.
+
+**Frontend follow-up (separate, still TODO):** the three call sites should send
+`useLocale()` in the body, and — with the backend running — `npm run api:types`
++ migrate the 18b `backendFetch` calls to the typed `apiClient`. Not done in this
+entry.
+
+---
+
 ## 2026-07-05 — Password reset & e-mail verification UI — Prompt 18b
 
 Frontend for the flows the backend gained in 18a. Reuses the existing auth
