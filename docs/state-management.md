@@ -59,7 +59,11 @@ Available hooks:
 ### API client
 
 `src/lib/api/client.ts` — typed with `openapi-fetch` against generated `schema.d.ts`.
-Auth header injected per-call via `bearerHeader(token)` helper (not a global middleware).
+Client-side calls carry **no auth header** — they go through the auth proxy at
+`/api/backend` (`src/app/api/backend/[...path]/route.ts`), which injects the
+Bearer token from the httpOnly session cookie. Queries gate on
+`useSession().status === "authenticated"` instead of on a token. Server-side
+callers attach the token per-call via `bearerHeader(token)` (see `docs/auth.md`).
 
 ---
 

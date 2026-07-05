@@ -10,6 +10,12 @@ Authentication is a two-layer system:
 1. **NextAuth v5** — manages the session cookie, CSRF, and JWT rotation.
 2. **invoice-api** — the source of truth for user identity and JWT tokens.
 
+**The invoice-api access token never reaches the browser.** It lives only in
+the server-side NextAuth JWT (httpOnly cookie); `session.accessToken` does not
+exist. Client code talks to the API exclusively through the auth proxy at
+`/api/backend/...`, which injects the Bearer header server-side. See
+"Auth proxy" below.
+
 ---
 
 ## Login flow
@@ -22,6 +28,34 @@ LoginForm (client)
       → returns { token, refreshToken, expiresAt, user }
   → stored in NextAuth signed httpOnly JWT cookie
 ```
+
+---
+
+## Auth proxy (`/api/backend/[...path]`)
+
+`src/app/api/backend/[...path]/route.ts` — the only path browser code uses to
+reach invoice-api (it replaced the former passive `next.config` rewrite):
+
+```
+Browser fetch /api/backend/api/invoices     (no Authorization header —
+  |                                          only the httpOnly session cookie)
+  → route handler (server):
+      getApiToken() — decodes the NextAuth JWT cookie (src/lib/auth/api-token.ts)
+        → access token still valid (30 s buffer)? use it
+        → expired? refreshAccessToken() directly against invoice-api;
+          the rotated JWT is re-encoded and persisted via Set-Cookie
+        → no session / refresh failed? respond 401 {"error":"Unauthorized"}
+      fetch NEXT_PUBLIC_API_BASE_URL/<path>?<query>
+        with Authorization: Bearer <access token> injected
+  → response streamed back unchanged (status, error bodies, binary PDF/XML)
+```
+
+Supported methods: GET/POST/PUT/PATCH/DELETE. Backend 401s pass through
+unchanged so the client-side dead-session handling (below) keeps working.
+
+Server-side code (RSC, NextAuth callbacks) does NOT use the proxy — it calls
+the API directly (`apiClient` + `bearerHeader()`), sourcing the token from
+`getApiToken(await headers())`.
 
 ---
 
@@ -46,6 +80,12 @@ grace window for concurrent refreshes; reuse after the window kills all of the
 user's sessions. See `../invoice-api/docs/adr/0001-refresh-token-rotation-grace.md`.
 
 Implementation: `src/lib/auth/refresh.ts`
+
+The auth proxy performs the same refresh via `getApiToken()` when a
+`/api/backend` call arrives with an expired access token (deduped per refresh
+token within the server instance; the rotated JWT is written back into the
+session cookie on the proxy response). Refresh always goes directly against
+invoice-api — never through the proxy itself.
 
 ---
 
@@ -82,26 +122,34 @@ No Prisma user creation. invoice-api owns the user store.
 
 ## Using the session
 
-**Server component / server action:**
+**Server component / server action** (identity only — no token on the session):
 ```ts
 import { auth } from "@/lib/auth";
 const session = await auth();
-const token = session?.accessToken;
+session?.user.id;
 ```
 
-**Client component / hook:**
+**Server-side API calls** (RSC / route handlers — token from the server-only JWT):
 ```ts
-const { data: session } = useSession();
-const token = (session as { accessToken?: string })?.accessToken;
+import { headers } from "next/headers";
+import { getApiToken } from "@/lib/auth/api-token";
+import { apiClient, bearerHeader } from "@/lib/api/client";
+
+const token = (await getApiToken(await headers()))?.accessToken;
+apiClient.GET("/api/auth/me", { headers: bearerHeader(token) });
 ```
 
-**Attaching the Bearer token to API calls:**
+**Client component / hook** — no tokens, no auth headers. Just call the API;
+`apiClient`'s client-side baseUrl is `/api/backend`, the proxy does the rest:
 ```ts
-import { bearerHeader } from "@/lib/api/client";
-apiClient.GET("/api/invoices", { headers: bearerHeader(token) });
+const result = await apiClient.GET("/api/invoices", { params: { query: filters } });
+// gate queries on session status, not on a token:
+const { status } = useSession();
+useQuery({ ..., enabled: status === "authenticated" });
 ```
 
-The `bearerHeader()` helper returns `{}` if token is undefined — safe to call unconditionally.
+`bearerHeader()` returns `{}` if token is undefined — safe to call
+unconditionally, but it is server-side-only by convention now.
 
 ---
 
@@ -110,9 +158,11 @@ The `bearerHeader()` helper returns `{}` if token is undefined — safe to call 
 | File | Purpose |
 |---|---|
 | `src/lib/auth.ts` | NextAuth config — Credentials provider, jwt/session callbacks |
-| `src/lib/auth/refresh.ts` | `refreshAccessToken()` — called from jwt() callback |
-| `src/lib/api/client.ts` | `apiClient` + `bearerHeader()` |
-| `src/types/next-auth.d.ts` | Type extensions: `session.accessToken`, `session.error`, JWT fields |
+| `src/lib/auth/refresh.ts` | `refreshAccessToken()` — called from jwt() callback and the auth proxy |
+| `src/lib/auth/api-token.ts` | `getApiToken()` — server-only access to the invoice-api token (decode JWT cookie + refresh) |
+| `src/app/api/backend/[...path]/route.ts` | Auth proxy — injects the Bearer header for all browser API calls |
+| `src/lib/api/client.ts` | `apiClient` + `bearerHeader()` (bearer: server-side only) |
+| `src/types/next-auth.d.ts` | Type extensions: `session.error`, JWT fields (`accessToken` is JWT-only) |
 | `src/app/api/auth/register/route.ts` | Register proxy route |
 | `src/lib/auth/sign-out-on-auth-error.ts` | Deduped global signout on dead sessions |
 | `src/components/providers/session-guard.tsx` | Client watcher for `session.error` |
@@ -125,8 +175,8 @@ The `bearerHeader()` helper returns `{}` if token is undefined — safe to call 
 session.user.id          // UUID from invoice-api
 session.user.email
 session.user.name
-session.accessToken      // invoice-api JWT — undefined for non-credentials sessions
 session.error            // "RefreshAccessTokenError" | undefined
+// NO session.accessToken — the invoice-api JWT is server-only (auth proxy).
 ```
 
 ---
