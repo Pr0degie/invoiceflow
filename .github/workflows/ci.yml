@@ -25,3 +25,15 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # Gate on high+ only: moderate advisories in framework-pinned transitive
+      # deps (e.g. postcss via next) have no non-breaking fix and would make
+      # the pipeline permanently red.
+      - name: Audit dependencies (high and above)
+        run: npm audit --audit-level=high
+
+      - name: Production build
+        run: npm run build

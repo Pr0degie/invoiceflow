@@ -36,7 +36,7 @@ const csp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
-// HSTS is managed by Vercel — deliberately not duplicated here.
+// HSTS is managed at the edge (Coolify's proxy) — deliberately not duplicated here.
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -50,6 +50,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for the Docker image (node server.js) —
+  // the runtime stage copies .next/standalone + .next/static + public only.
+  output: "standalone",
   allowedDevOrigins: ["192.168.178.30"],
   experimental: {
     serverActions: {

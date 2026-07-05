@@ -14,9 +14,15 @@ import type { paths } from "./schema";
  * Hooks never see or send tokens — the browser has no Bearer header and no
  * token in JS-reachable storage, and the request stays same-origin (no CORS).
  */
+// Server-side resolution prefers API_BASE_URL: NEXT_PUBLIC_* values are
+// inlined at build time, so in the Docker image only a runtime variable can
+// point at the deployed backend. NEXT_PUBLIC_API_BASE_URL stays as the local
+// dev fallback (.env).
 const baseUrl =
   typeof window === "undefined"
-    ? (process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080")
+    ? (process.env.API_BASE_URL ??
+      process.env.NEXT_PUBLIC_API_BASE_URL ??
+      "http://localhost:8080")
     : "/api/backend";
 
 export const apiClient = createClient<paths>({ baseUrl });

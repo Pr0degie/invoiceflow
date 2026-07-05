@@ -14,7 +14,8 @@ import {
  * the browser calls `/api/backend/<api-path>` without any credentials in
  * JS-reachable storage. This handler reads the httpOnly NextAuth JWT cookie
  * server-side, injects `Authorization: Bearer <access token>` and forwards
- * the request to `NEXT_PUBLIC_API_BASE_URL`.
+ * the request to the backend (`API_BASE_URL`, with the build-time
+ * `NEXT_PUBLIC_API_BASE_URL` as local-dev fallback).
  *
  * - Supports GET/POST/PUT/PATCH/DELETE.
  * - Streams request and response bodies through untouched — binary responses
@@ -27,8 +28,12 @@ import {
  *   refresh tokens are single-use).
  */
 
+// Runtime var first — NEXT_PUBLIC_* is inlined at build time and therefore
+// frozen inside the Docker image (see src/lib/api/client.ts).
 const API_BASE = (
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080"
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://localhost:8080"
 ).replace(/\/+$/, "");
 
 // 30 days — NextAuth's default JWT session maxAge, which src/lib/auth.ts
