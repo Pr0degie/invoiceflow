@@ -4,6 +4,50 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — Pre-launch hardening: production image, proxy migration, CI parity
+
+Frontend half of the Coolify deploy prep (backend half in
+`../invoice-api/progress.md`; env-var checklist in `../invoice-api/docs/deploy.md`).
+
+**Production Docker image (new).** `output: "standalone"` in `next.config.ts`
+plus a multi-stage `Dockerfile` (node:20-alpine, deps → build → runtime,
+non-root `nextjs`, port 3000, 281 MB). Verified end-to-end against the
+dockerized backend: credentials login through the container, session-cookie
+proxy call to `/api/auth/me` returns the demo user, `/de` renders German.
+
+**`middleware.ts` → `proxy.ts`, auth() wrapper removed.** The standalone
+server turned next-intl's default-locale rewrite into a 307 to the request's
+own URL — an infinite redirect loop on every unprefixed route (`/`,
+`/auth/login`, …); `next dev` masks it, so it surfaced only when the image was
+first actually run. Isolated the trigger: plain rewrites and bare
+`createMiddleware(routing)` work; next-auth's `auth()` wrapper
+(5.0.0-beta.30) corrupts the rewrite response. The proxy now reads the session
+via `getToken()` directly (UX gate only — the API authorizes every call) and
+the file follows the Next 16 proxy convention. Trade-off documented in the
+docblock: no token refresh during navigations anymore (auth-proxy route +
+60 s backend rotation grace cover it).
+
+**Runtime backend URL.** Server-side code now prefers `API_BASE_URL` over
+`NEXT_PUBLIC_API_BASE_URL` — the `NEXT_PUBLIC_` value is inlined at build
+time, so only a runtime variable can point a prebuilt image at its backend.
+
+**Zod 4 fix.** Four auth route handlers still used the Zod 3 `.error.errors`
+API. Local `node_modules` had a stale zod 3 (lockfile pins 4.4.3), so local
+tsc/build were green while any fresh `npm ci` — GitHub CI, Docker build —
+failed. Fixed to `.issues`, local install resynced.
+
+**OpenAPI resync.** Regenerated `openapi.json` + `schema.d.ts` from the
+running API: structural diff was empty (18c had already regenerated); only 17
+response descriptions changed with the Swashbuckle bump. No untyped interim
+calls left.
+
+**CI parity.** `ci.yml` now runs type check → lint → `npm audit
+--audit-level=high` → production build (all verified locally against a fresh
+install). Two moderate advisories remain in next-pinned `postcss` with no
+non-breaking fix — documented in the workflow.
+
+---
+
 ## 2026-07-05 — Decouple e-mail delivery from the request path (invoice-api)
 
 Closes a timing/robustness gap in the auth mail flows. Sending was inline: with
