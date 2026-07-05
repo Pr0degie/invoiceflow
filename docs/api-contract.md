@@ -82,7 +82,9 @@ backend normalizes against the allowlist, so an unexpected value is harmless.
    (identical for known/unknown addresses — no enumeration, no timing tell). If
    the account exists, an e-mail links to `{FRONTEND_BASE_URL}/reset-password?token=…`.
 2. That page collects a new password and calls `POST /reset-password { token, newPassword }`
-   → `204`. `newPassword` has the same rule as register (**min 8 chars**).
+   → `204`. `newPassword` has the same rule as register (**min 8, max 128 chars** —
+   BCrypt only evaluates the first 72 bytes; the cap applies to register and
+   change-password too).
 3. On success **all refresh tokens are revoked** — any other active session is
    logged out. The frontend should route to login afterwards.
 
