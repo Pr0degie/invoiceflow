@@ -111,10 +111,15 @@ redirect URL, and `signIn(..., { redirect: false })` returns it as `res.code`.
 instead of the generic "wrong password". Every other failure stays `null` →
 generic (no leak).
 
-**Note (types):** the four proxy routes call the backend via
-`src/lib/api/backend-fetch.ts` (plain `fetch`) rather than the typed `apiClient`,
-because the committed `openapi.json` predates these endpoints. Regenerate with
-`npm run api:types` (backend must be running) and they can migrate to `apiClient`.
+**Locale (Prompt 18c):** `register`, `forgot-password` and `resend-verification`
+forward the active next-intl locale (`useLocale()`) in the request body; the
+backend uses it to localize the mail and to prefix the link path
+(`/{locale}/verify-email`). The proxy routes pass it straight through — the
+schema field is a permissive `z.string().optional()` because the backend
+allowlists (`de`/`en`, else `de`), so it is the authority. All four new proxy
+routes call the backend via the typed `apiClient` (the earlier `backendFetch`
+stopgap was removed once the OpenAPI spec caught up — regenerate types with
+`npm run api:types` when the backend changes).
 
 Shared resend UI: `src/components/auth/resend-verification.tsx` (60 s cooldown;
 takes a fixed `email` prop, or renders an e-mail field when the address is
@@ -156,8 +161,7 @@ The `bearerHeader()` helper returns `{}` if token is undefined — safe to call 
 | `src/lib/api/client.ts` | `apiClient` + `bearerHeader()` |
 | `src/types/next-auth.d.ts` | Type extensions: `session.accessToken`, `session.error`, JWT fields |
 | `src/app/api/auth/register/route.ts` | Register proxy route |
-| `src/app/api/auth/{forgot-password,reset-password,verify-email,resend-verification}/route.ts` | Anonymous auth proxy routes (Prompt 18b) |
-| `src/lib/api/backend-fetch.ts` | Server-only `fetch` helper for the not-yet-typed 18b endpoints |
+| `src/app/api/auth/{forgot-password,reset-password,verify-email,resend-verification}/route.ts` | Anonymous auth proxy routes (Prompt 18b; typed `apiClient` since 18c) |
 | `src/components/auth/{forgot-password-form,reset-password-form,verify-email-client,check-email-client,resend-verification}.tsx` | 18b flow UI |
 | `src/lib/auth/sign-out-on-auth-error.ts` | Deduped global signout on dead sessions |
 | `src/components/providers/session-guard.tsx` | Client watcher for `session.error` |

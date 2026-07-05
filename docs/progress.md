@@ -26,10 +26,24 @@ README auth section.
 lists `locale?` on the three endpoints and documents the always-prefixed link
 format + allowlist/fallback.
 
-**Frontend follow-up (separate, still TODO):** the three call sites should send
-`useLocale()` in the body, and — with the backend running — `npm run api:types`
-+ migrate the 18b `backendFetch` calls to the typed `apiClient`. Not done in this
-entry.
+**Frontend follow-up — DONE (this session).** The three call sites (register,
+forgot-password, resend) now send `useLocale()` in the body; the proxy routes
+forward `locale` (schema field is a permissive `z.string().optional()` since the
+backend is the allowlist authority). Ran the backend (`docker compose up` —
+`docker-compose.override.yml` already remaps its DB to host 5433, so no clash
+with the other stack on 5432), `npm run api:types` picked up the four endpoints
++ `locale`, and all four 18b `backendFetch` stopgap routes were migrated to the
+typed `apiClient`; `src/lib/api/backend-fetch.ts` deleted.
+
+**Verified live (E2E through the running backend):** register via the frontend
+proxy with `locale:"de"` → backend LogEmailSender shows subject "Bestätige deine
+E-Mail-Adresse" + link `http://localhost:3000/de/verify-email?token=…`; with
+`locale:"en"` → "Confirm your email address" + `/en/verify-email?token=…`.
+forgot/resend proxy return generic `200`; an out-of-allowlist `locale:"fr"` is
+accepted (`200`) and normalized to `de` by the backend. `tsc`, `lint`, `build`
+green.
+
+**Still owed on 18b (unchanged):** Playwright screenshots (§5) — MCP absent.
 
 ---
 
