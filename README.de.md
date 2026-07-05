@@ -41,7 +41,7 @@ keine Abkürzungen.
 │  • Typed API Client     │         │  • QuestPDF              │
 │  • i18n (EN + DE)       │         │  • JWT-Auth              │
 │                         │         │                          │
-│  → Vercel               │         │  → Railway               │
+│  → Coolify (Hetzner)    │         │  → Coolify (Hetzner)     │
 └─────────────────────────┘         └──────────────────────────┘
 ```
 

@@ -40,7 +40,7 @@ real domain logic, real deployment, no shortcuts.
 │  • Typed API client     │         │  • QuestPDF              │
 │  • i18n (EN + DE)       │         │  • JWT auth              │
 │                         │         │                          │
-│  → Vercel               │         │  → Railway               │
+│  → Coolify (Hetzner)    │         │  → Coolify (Hetzner)     │
 └─────────────────────────┘         └──────────────────────────┘
 ```
 

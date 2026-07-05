@@ -39,9 +39,10 @@ export interface ApiTokenResult {
    * Present when the access token had expired and was refreshed while being
    * read. invoice-api rotates refresh tokens (single-use + 60 s grace — see
    * docs/auth.md), so route handlers MUST persist this JWT back into the
-   * session cookie. Server components cannot set cookies; they can ignore
-   * this because the middleware refreshes and persists on the same
-   * navigation, inside the grace window.
+   * session cookie. Server components cannot set cookies; a refresh they
+   * trigger is not persisted — the next proxy call re-refreshes with the old
+   * token inside the backend's 60 s rotation grace window and persists then.
+   * (Since the proxy.ts migration the routing layer no longer refreshes.)
    */
   refreshedJwt?: JWT;
 }

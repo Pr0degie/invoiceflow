@@ -16,7 +16,7 @@ Backend: `invoice-api` (.NET 8 / ASP.NET Core). Separate repo at `../invoice-api
 | Env | URL |
 |---|---|
 | Local dev | `http://localhost:8080` — start with `docker compose up` in `../invoice-api/` |
-| Production | Railway — set `NEXT_PUBLIC_API_BASE_URL` env var on Vercel |
+| Production | Coolify (Hetzner) — set `API_BASE_URL` (runtime) on the frontend service; full checklist in `../invoice-api/docs/deploy.md` |
 
 ---
 
