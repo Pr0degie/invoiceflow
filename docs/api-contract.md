@@ -27,6 +27,10 @@ All endpoints except `/api/auth/*` and `/health` require:
 Authorization: Bearer <jwt>
 ```
 
+Browser code never sends this header itself — client calls go through the
+frontend auth proxy (`/api/backend/...` → `src/app/api/backend/[...path]/route.ts`),
+which injects it server-side. See `docs/auth.md`.
+
 ---
 
 ## Auth Endpoints

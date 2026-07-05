@@ -40,6 +40,7 @@ import {
   useFinalizeInvoice,
   useCancelInvoice,
 } from "@/lib/api/hooks/useInvoices";
+import { useInvoicePdfPreview } from "./invoice-pdf-preview";
 import type { components } from "@/lib/api/schema";
 import { toast } from "sonner";
 
@@ -64,6 +65,7 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
   const updateStatus = useUpdateInvoiceStatus();
   const deleteInvoice = useDeleteInvoice();
   const downloadPdf = useDownloadInvoicePdf();
+  const pdfPreview = useInvoicePdfPreview();
   const finalizeInvoice = useFinalizeInvoice();
   const cancelInvoice = useCancelInvoice();
 
@@ -124,6 +126,14 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() =>
+              pdfPreview.preview({ id, number: invoice.number })
+            }
+          >
+            <Eye className="mr-2 size-4" />
+            {t("actions.previewPdf")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() =>
               downloadPdf.mutate({ id, number: invoice.number })
             }
           >
@@ -176,6 +186,10 @@ export function InvoiceRowActions({ invoice }: InvoiceRowActionsProps) {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* PDF preview dialog (desktop; small viewports open a new tab) —
+          rendered as a sibling so closing the dropdown doesn't unmount it */}
+      {pdfPreview.dialog}
 
       <AlertDialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>
         <AlertDialogContent>

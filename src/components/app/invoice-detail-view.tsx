@@ -6,6 +6,7 @@ import { useTranslations, useLocale, useFormatter } from "next-intl";
 import Link from "next/link";
 import {
   Download,
+  Eye,
   Loader2,
   MoreHorizontal,
   CheckCircle,
@@ -65,6 +66,7 @@ import {
   useCancelInvoice,
   useReopenInvoice,
 } from "@/lib/api/hooks/useInvoices";
+import { useInvoicePdfPreview } from "./invoice-pdf-preview";
 import { useMe } from "@/lib/api/hooks/useMe";
 import { isTaxProfileComplete } from "@/lib/tax-profile";
 import { useFormatCurrency, useFormatDate } from "@/lib/i18n/formatters";
@@ -90,6 +92,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const deleteInvoice = useDeleteInvoice();
   const downloadPdf = useDownloadInvoicePdf();
   const downloadXml = useDownloadInvoiceXml();
+  const pdfPreview = useInvoicePdfPreview();
   const finalizeInvoice = useFinalizeInvoice();
   const cancelInvoice = useCancelInvoice();
   const reopenInvoice = useReopenInvoice();
@@ -235,6 +238,23 @@ export function InvoiceDetailView({ id }: { id: string }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Preview PDF — draft: current render (ENTWURF watermark from the
+              backend), finalized: archived PDF. Same endpoint as the download. */}
+          <Button
+            variant="outline"
+            onClick={() =>
+              pdfPreview.preview({ id: invoiceId, number: invoice.number })
+            }
+            disabled={pdfPreview.isPending}
+          >
+            {pdfPreview.isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Eye className="mr-2 size-4" />
+            )}
+            {t("actions.previewPdf")}
+          </Button>
+
           {/* Download PDF — always visible */}
           <Button
             variant="outline"
@@ -679,6 +699,9 @@ export function InvoiceDetailView({ id }: { id: string }) {
           </div>
         </div>
       </div>
+
+      {/* PDF preview dialog (desktop; small viewports open a new tab) */}
+      {pdfPreview.dialog}
 
       {/* Finalize confirmation — after this the invoice is immutable */}
       <AlertDialog open={finalizeOpen} onOpenChange={setFinalizeOpen}>

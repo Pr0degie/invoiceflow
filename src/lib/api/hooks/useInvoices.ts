@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { apiClient, bearerHeader } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import { queryKeys, type InvoiceListFilters } from "@/lib/api/query-keys";
 import type { components } from "@/lib/api/schema";
@@ -12,9 +12,13 @@ type Invoice = components["schemas"]["InvoiceResponse"];
 type CreateInvoiceInput = components["schemas"]["CreateInvoiceRequest"];
 type UpdateStatusInput = components["schemas"]["UpdateStatusRequest"];
 
-function useToken() {
-  const { data: session } = useSession();
-  return (session as { accessToken?: string } | null)?.accessToken;
+// No tokens in the client: all calls hit the auth proxy at /api/backend,
+// which injects the Bearer header from the httpOnly session cookie
+// (src/app/api/backend/[...path]/route.ts). Queries only gate on the session
+// status so unauthenticated mounts (e.g. /debug-api) don't fire doomed 401s.
+function useAuthed() {
+  const { status } = useSession();
+  return status === "authenticated";
 }
 
 function throwOnError(
@@ -25,49 +29,45 @@ function throwOnError(
 }
 
 export function useInvoices(filters: InvoiceListFilters = {}) {
-  const token = useToken();
+  const authed = useAuthed();
 
   return useQuery({
     queryKey: queryKeys.invoices.list(filters),
     queryFn: async () => {
       const result = await apiClient.GET("/api/invoices", {
         params: { query: filters },
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice[];
     },
-    enabled: !!token,
+    enabled: authed,
   });
 }
 
 export function useInvoice(id: string) {
-  const token = useToken();
+  const authed = useAuthed();
 
   return useQuery({
     queryKey: queryKeys.invoices.detail(id),
     queryFn: async () => {
       const result = await apiClient.GET("/api/invoices/{id}", {
         params: { path: { id } },
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
     },
-    enabled: !!token && !!id,
+    enabled: authed && !!id,
     staleTime: 10_000,
   });
 }
 
 export function useCreateInvoice() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (input: CreateInvoiceInput) => {
       const result = await apiClient.POST("/api/invoices", {
         body: input,
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
@@ -83,7 +83,6 @@ export function useCreateInvoice() {
 }
 
 export function useUpdateInvoiceStatus() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -97,7 +96,6 @@ export function useUpdateInvoiceStatus() {
       const result = await apiClient.PATCH("/api/invoices/{id}/status", {
         params: { path: { id } },
         body: { status },
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
@@ -130,7 +128,6 @@ export function useUpdateInvoiceStatus() {
 // Finalization assigns the sequential number, freezes the invoice, and archives
 // its PDF — no optimistic update, the server response is the source of truth.
 export function useFinalizeInvoice() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -140,7 +137,6 @@ export function useFinalizeInvoice() {
       const result = await apiClient.POST("/api/invoices/{id}/finalize", {
         params: { path: { id } },
         body: issueDate ? { issueDate } : undefined,
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
@@ -164,14 +160,12 @@ export function useFinalizeInvoice() {
 // yet — resets Finalized → Draft. The invoice keeps its number; re-finalizing
 // reuses it. No optimistic update: the server enforces the guards (400/409).
 export function useReopenInvoice() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
       const result = await apiClient.POST("/api/invoices/{id}/reopen", {
         params: { path: { id } },
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
@@ -192,14 +186,12 @@ export function useReopenInvoice() {
 // Storno: issues a reversing Cancellation invoice and sets the original to
 // Cancelled. Returns the Stornorechnung.
 export function useCancelInvoice() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
       const result = await apiClient.POST("/api/invoices/{id}/cancel", {
         params: { path: { id } },
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
@@ -218,14 +210,12 @@ export function useCancelInvoice() {
 }
 
 export function useDeleteInvoice() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
       const result = await apiClient.DELETE("/api/invoices/{id}", {
         params: { path: { id } },
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
     },
@@ -244,7 +234,6 @@ export function useDeleteInvoice() {
 }
 
 export function useUpdateInvoice() {
-  const token = useToken();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -258,7 +247,6 @@ export function useUpdateInvoice() {
       const result = await apiClient.PUT("/api/invoices/{id}", {
         params: { path: { id } },
         body: data,
-        headers: bearerHeader(token),
       });
       throwOnError(result, result.error);
       return result.data as Invoice;
@@ -279,14 +267,10 @@ export function useUpdateInvoice() {
 }
 
 export function useDownloadInvoicePdf() {
-  const token = useToken();
-
   return useMutation({
     mutationFn: async ({ id, number }: { id: string; number: string | null | undefined }) => {
-      const response = await fetch(
-        `/api/backend/api/invoices/${id}/pdf`,
-        { headers: bearerHeader(token) as HeadersInit }
-      );
+      // Auth happens in the proxy — the browser only sends the session cookie.
+      const response = await fetch(`/api/backend/api/invoices/${id}/pdf`);
       if (!response.ok) throw new ApiError(response.status, null);
 
       const blob = await response.blob();
@@ -304,14 +288,9 @@ export function useDownloadInvoicePdf() {
 }
 
 export function useDownloadInvoiceXml() {
-  const token = useToken();
-
   return useMutation({
     mutationFn: async ({ id, number }: { id: string; number: string | null | undefined }) => {
-      const response = await fetch(
-        `/api/backend/api/invoices/${id}/xml`,
-        { headers: bearerHeader(token) as HeadersInit }
-      );
+      const response = await fetch(`/api/backend/api/invoices/${id}/xml`);
       if (!response.ok) throw new ApiError(response.status, null);
 
       const blob = await response.blob();

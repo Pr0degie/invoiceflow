@@ -4,6 +4,93 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-05 — PDF preview next to the download — Prompt 17
+
+Frontend only. Invoices (drafts included) can now be previewed in-app without
+downloading — draft previews carry the backend's ENTWURF watermark, finalized
+invoices show the archived PDF; the endpoint distinguishes that itself.
+
+1. **Shared preview** `src/components/app/invoice-pdf-preview.tsx`:
+   `useInvoicePdfPreview()` returns `{ preview(id, number), isPending,
+   dialog }`. It fetches `/api/backend/api/invoices/{id}/pdf` (same
+   cookie-only auth-proxy path as the download in `useInvoices.ts`), wraps
+   the blob in an object URL and shows it in an `<iframe>` inside a ~90 %
+   viewport shadcn `Dialog` (`h-[90vh] w-[92vw]`). Loading spinner while
+   fetching; errors surface via the existing sonner toast pattern; the
+   object URL is revoked in the effect cleanup when the dialog closes
+   (including fetches that resolve after close). No PDF.js — native browser
+   viewer only.
+2. **Mobile fallback**: on small viewports (`max-width: 767px`; iOS Safari
+   renders PDFs in iframes unreliably) the hook skips the dialog and opens
+   the object URL in a new tab. `window.open` runs synchronously in the
+   click handler (popup blockers), the blob URL is set after the fetch and
+   revoked after 60 s.
+3. **Entry points**: "PDF-Vorschau"/"Preview PDF" (`Eye` icon) button in
+   `invoice-detail-view.tsx` next to the PDF download, and a row-menu item
+   in `invoice-row-actions.tsx` (it already had a per-row PDF download) —
+   same component, no duplicate. New `ui/dialog.tsx` (shadcn dialog on the
+   `radix-ui` package, styled like `alert-dialog.tsx`/`sheet.tsx`); i18n
+   keys `invoices.actions.previewPdf` + `invoices.preview.*` in de/en.
+4. **CSP**: `frame-src 'self' blob:` added in `next.config.ts` — without it
+   the blob iframe falls back to `default-src 'self'`, which excludes
+   `blob:`. `object-src` stays `'none'` (preview uses iframe, not embed).
+
+**Verified:** `npm run lint` + `next build` (incl. tsc) green. Browser E2E
+(Playwright chromium, prod server + mock backend + forged session cookie,
+same harness style as Prompt 14): detail button and row-menu item open the
+dialog with an `iframe[src="blob:…"]`, title carries the number, no CSP
+violations; instrumented `URL.create/revokeObjectURL` shows created = revoked
+after Escape-close (no leak); at 375 px no dialog renders and a new tab
+receives the blob URL (headless shell downloads it — no PDF viewer plugin
+there). CSP header on the prod server contains `frame-src 'self' blob:`.
+**Untested** (no real device/backend here): actual PDF paint in the dialog
+and the new-tab viewer on real iOS Safari — eyeball once with the backend up.
+
+---
+
+## 2026-07-05 — Frontend security: auth proxy + CSP — Prompt 14
+
+Frontend only. The invoice-api access token is no longer reachable from
+browser JS, and the app now ships a restrictive CSP + security headers.
+
+1. **Auth proxy** `src/app/api/backend/[...path]/route.ts` replaces the
+   passive `next.config` rewrite for `/api/backend/:path*`. It decodes the
+   httpOnly NextAuth JWT cookie server-side (`getApiToken()` in
+   `src/lib/auth/api-token.ts`), injects `Authorization: Bearer`, forwards
+   GET/POST/PUT/PATCH/DELETE to `NEXT_PUBLIC_API_BASE_URL` and streams
+   status/error bodies/binary (PDF/XML) back unchanged. Expired access tokens
+   are refreshed in the proxy (direct API call, deduped per refresh token);
+   the rotated JWT is persisted via Set-Cookie (refresh tokens are
+   single-use). No session / failed refresh → 401 `{"error":"Unauthorized"}`
+   → existing `signOutOnAuthError` flow.
+2. `session.accessToken` removed (session callback + type). Hooks
+   (`useInvoices`, `useStats`, `useMe`) no longer read tokens or send
+   Bearer headers; queries gate on `useSession().status === "authenticated"`.
+   PDF/XML downloads fetch `/api/backend/...` cookie-only. The invoices/new
+   RSC sources its token from `getApiToken(await headers())`.
+3. **Security headers** in `next.config.ts` `headers()` for all routes:
+   CSP (`default-src 'self'`; `script-src 'self' 'unsafe-inline'` — App
+   Router inline bootstrap scripts, no nonce mechanism by design, dev adds
+   `'unsafe-eval'`; `style-src 'unsafe-inline'` for Radix/recharts/next-themes;
+   `img-src blob: data:`; `connect-src 'self'` + `ws:` dev-only;
+   `frame-ancestors 'none'`), `X-Content-Type-Options: nosniff`,
+   `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`
+   (camera/mic/geolocation off), `X-Frame-Options: DENY`. HSTS stays with
+   Vercel. `next-auth` already pinned exactly to `5.0.0-beta.30` (task 3).
+
+**Verified:** `npm run lint`, `tsc`, `next build` green. Prod server
+(`next start`) + mock backend on :8080 + forged session cookie: headers
+present on every response; proxy without session → 401; valid cookie → API
+receives `Bearer <token>`, query strings + POST bodies pass through, PDF
+streams with `content-type: application/pdf` + `content-disposition`; expired
+cookie → refresh hit the mock, request forwarded with the new token, response
+Set-Cookie contains the rotated JWT (decoded and checked). **Untested** (no
+real backend/browser in this environment): manual click-through
+login → dashboard → list → detail → PDF → logout and CSP console-violation
+check in a real browser — do this on the next run with the backend up.
+
+---
+
 ## 2026-07-04 — E-Rechnung (XRechnung / EN 16931) — Prompt 13
 
 Cross-repo. Every finalized invoice now emits a legally binding German
