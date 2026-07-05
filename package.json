@@ -45,11 +45,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.5.2",
-    "eslint": "^10",
+    "eslint": "^8",
     "eslint-config-next": "15.1.0",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8",
     "tailwindcss": "^4.2.2",
-    "typescript": "^6"
+    "typescript": "^5"
   }
 }
