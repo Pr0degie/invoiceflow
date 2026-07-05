@@ -22,6 +22,8 @@
 ## Typography
 
 - **Font:** Geist Sans (loaded via `next/font`). No serif. No Google Fonts via `<link>`.
+  (Web UI only — the invoice PDF is a separate backend artifact and deliberately
+  uses Liberation Serif; see `../../invoice-api` `PdfService.cs`.)
 - Numbers: always `tabular-nums` in tables and KPI displays.
 - Large headlines: `tracking-tight`, `leading-[1.05]`.
 
@@ -31,7 +33,8 @@
 
 - Text logo: "InvoiceFlow" + small `Receipt` or `FileText` icon from `lucide-react` in accent color.
 - No AI-generated logos.
-- Favicon: simple monogram "IF" or receipt icon, same accent color.
+- Favicon: the `Receipt` icon on the accent color, matching `<Logo />` (rendered by
+  `src/app/icon.tsx` / `apple-icon.tsx`).
 
 ---
 
