@@ -24,3 +24,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# claude code — track .claude/ and .agents/, but not machine-local settings
+.claude/settings.local.json
+
+# design/build reference pack — kept locally, not versioned
+/invoiceflow-pack-en/
