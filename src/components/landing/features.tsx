@@ -18,12 +18,9 @@ export async function Features() {
     <section id="features" className="py-20 md:py-28 bg-muted/30">
       <div className="container mx-auto max-w-6xl px-4">
         {/* Section header */}
-        <AnimatedSection className="mb-12 md:mb-16 max-w-2xl">
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
-            {t("eyebrow")}
-          </p>
+        <AnimatedSection className="mb-12 md:mb-16 max-w-2xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-tight mb-4">
-            {t("title")}
+            {t("eyebrow")}
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
             {t("sub")}

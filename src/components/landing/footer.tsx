@@ -82,7 +82,7 @@ export async function Footer() {
               <Logo />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-              {t("brand.tagline")}
+              {t("brand.description")}
             </p>
             {/* Socials */}
             <div className="flex gap-3 mt-5">

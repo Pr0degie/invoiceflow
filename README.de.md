@@ -2,7 +2,7 @@
 
 # InvoiceFlow
 
-**Rechnungen, die sich schreiben lassen.**
+**Rechnung schreiben? Erledigt, bevor der Kaffee kalt ist.**
 
 Full-Stack-Rechnungsverwaltung für Freelancer und kleine Teams.
 GoBD-konforme Rechnungen, PDF-Export, deutsche E-Rechnung (XRechnung / EN 16931),

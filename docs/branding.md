@@ -6,7 +6,7 @@
 
 - **Name:** InvoiceFlow
 - **Tagline (en):** "Invoicing that gets out of your way."
-- **Tagline (de):** "Rechnungen, die sich schreiben lassen."
+- **Tagline (de):** "Rechnung schreiben? Erledigt, bevor der Kaffee kalt ist."
 
 ---
 

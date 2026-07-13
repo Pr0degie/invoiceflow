@@ -1,8 +1,7 @@
 {
   "common": {
     "brand": {
-      "name": "InvoiceFlow",
-      "tagline": "Invoicing that gets out of your way."
+      "name": "InvoiceFlow"
     },
     "actions": {
       "signIn": "Sign in",
@@ -41,7 +40,6 @@
     },
     "features": {
       "eyebrow": "What's included",
-      "title": "Everything a freelancer actually needs",
       "sub": "No bloat. Just the tools that save you time on every invoice you send.",
       "items": {
         "fast": {
@@ -64,7 +62,6 @@
     },
     "pricing": {
       "eyebrow": "Pricing",
-      "title": "Simple, transparent pricing",
       "sub": "Start for free. Host it yourself if you prefer full control. No hidden fees, no surprises.",
       "mostPopular": "Most Popular",
       "plans": {
@@ -84,7 +81,7 @@
         "pro": {
           "name": "Pro",
           "description": "For active freelancers",
-          "price": "12 €",
+          "price": "8.99 €",
           "period": "/month",
           "cta": "Start free trial",
           "features": [
@@ -115,7 +112,7 @@
     },
     "footer": {
       "brand": {
-        "tagline": "Invoicing that gets out of your way. Built for DACH freelancers and small businesses who want to focus on their work, not the paperwork."
+        "description": "Built for DACH freelancers and small businesses who want to focus on their work, not the paperwork."
       },
       "nav": {
         "product": "Product",

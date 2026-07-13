@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,6 @@ const locales = ["en", "de"] as const;
 export function LanguageSwitcher() {
   const locale = useLocale();
   const t = useTranslations("language");
-  const router = useRouter();
   const pathname = usePathname();
 
   function switchLocale(next: string) {
@@ -33,7 +32,17 @@ export function LanguageSwitcher() {
       newPath = `/de${stripped === "/" ? "" : stripped}`;
     }
 
-    router.push(newPath);
+    // Persist the choice in next-intl's locale cookie BEFORE navigating.
+    // With localePrefix 'as-needed', the default locale ('en') lives at '/'
+    // with no prefix; next-intl's locale detection would otherwise redirect a
+    // full-page load of '/' back to the previously chosen locale (e.g. '/de').
+    document.cookie = `NEXT_LOCALE=${next}; path=/; max-age=31536000; samesite=lax`;
+
+    // Full-page navigation (not client-side router.push): switching locale
+    // remounts the [locale] root layout, which re-renders next-themes' anti-flash
+    // <script> on the client and trips React 19's "script tag while rendering"
+    // console error. A real page load renders that script server-side instead.
+    window.location.href = newPath;
   }
 
   return (

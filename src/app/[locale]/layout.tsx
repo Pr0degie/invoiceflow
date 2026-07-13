@@ -26,7 +26,7 @@ export async function generateMetadata({
 
   return {
     title: {
-      default: `${t("name")} — ${t("tagline")}`,
+      default: t("name"),
       template: `%s | ${t("name")}`,
     },
     description:

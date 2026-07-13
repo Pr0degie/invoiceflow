@@ -36,7 +36,7 @@ export async function Hero() {
   ];
 
   return (
-    <section className="relative flex flex-col items-center justify-center text-center px-4 pt-24 pb-16 md:pt-32 md:pb-20 lg:pt-40 lg:pb-24 overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center text-center px-4 pt-12 pb-16 md:pt-16 md:pb-20 lg:pt-20 lg:pb-24 overflow-hidden">
       {/* Dot grid — light mode */}
       <div
         className="absolute inset-0 -z-10 dark:hidden"

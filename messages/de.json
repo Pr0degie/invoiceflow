@@ -1,8 +1,7 @@
 {
   "common": {
     "brand": {
-      "name": "InvoiceFlow",
-      "tagline": "Rechnungen, die sich schreiben lassen."
+      "name": "InvoiceFlow"
     },
     "actions": {
       "signIn": "Anmelden",
@@ -21,8 +20,8 @@
   "landing": {
     "hero": {
       "eyebrow": "Für Freelancer und kleine Teams",
-      "headline": "Rechnungen,",
-      "headlineAccent": "die sich schreiben lassen.",
+      "headline": "Rechnung schreiben?",
+      "headlineAccent": "Erledigt, bevor der Kaffee kalt ist.",
       "sub": "GoBD-konforme Rechnungen in unter 60 Sekunden. Versenden, verfolgen und als PDF exportieren — alles an einem Ort.",
       "trustLine": "Open Source · GoBD-konform · Hosting in der EU",
       "seeHowItWorks": "So funktioniert's",
@@ -41,7 +40,6 @@
     },
     "features": {
       "eyebrow": "Was enthalten ist",
-      "title": "Alles, was Freelancer wirklich brauchen",
       "sub": "Kein Ballast. Nur die Werkzeuge, die Ihnen bei jeder Rechnung Zeit sparen.",
       "items": {
         "fast": {
@@ -64,7 +62,6 @@
     },
     "pricing": {
       "eyebrow": "Preise",
-      "title": "Einfache, transparente Preise",
       "sub": "Kostenlos starten. Selbst hosten, wenn Sie volle Kontrolle bevorzugen. Keine versteckten Kosten.",
       "mostPopular": "Beliebteste Wahl",
       "plans": {
@@ -84,7 +81,7 @@
         "pro": {
           "name": "Pro",
           "description": "Für aktive Freelancer",
-          "price": "12 €",
+          "price": "8,99 €",
           "period": "/Monat",
           "cta": "Kostenlos testen",
           "features": [
@@ -115,7 +112,7 @@
     },
     "footer": {
       "brand": {
-        "tagline": "Rechnungen, die sich schreiben lassen. Für DACH-Freelancer und kleine Unternehmen, die sich auf ihre Arbeit konzentrieren wollen."
+        "description": "Für DACH-Freelancer und kleine Unternehmen, die sich auf ihre Arbeit konzentrieren wollen."
       },
       "nav": {
         "product": "Produkt",

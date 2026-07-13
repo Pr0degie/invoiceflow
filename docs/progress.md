@@ -4,6 +4,31 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-07-13 — Landing polish + locale-switch console-error fix
+
+**Locale switcher fix.** Switching language triggered a React 19 console error
+("Encountered a script tag while rendering React component"): `router.push`
+remounts the `[locale]` root layout, re-rendering next-themes' anti-flash
+`<script>` on the client. Switched `LanguageSwitcher` to a full-page navigation,
+which renders that script server-side instead. Because `localePrefix` is
+`as-needed`, the full load of `/` (default locale `en`) was then redirected back
+to the previous locale by next-intl's cookie detection — fixed by writing
+`NEXT_LOCALE` to the target locale before navigating.
+
+**Landing copy/layout.** Pro plan price 12 € → 8,99 € (de/en). Hero headline (de)
+reworked; browser `<title>` reduced to the bare brand name (dropped the tagline
+from metadata). Footer slogan removed, DACH description kept (`footer.brand.tagline`
+→ `footer.brand.description`). Features + pricing section headers centered; the
+large `<h2>` titles were dropped and the eyebrow label promoted to the `<h2>` in
+their place (orphaned `title` keys removed from both locale files). Hero top
+padding reduced (`pt-24/32/40` → `pt-12/16/20`). Branding + README (de) taglines
+aligned to the new hero line; en tagline unchanged.
+
+**Verified:** `tsc` clean, `next build` green, both message files valid JSON.
+No Playwright in this run — 375px layout of the centered headers unverified.
+
+---
+
 ## 2026-07-05 — Pre-launch hardening: production image, proxy migration, CI parity
 
 Frontend half of the Coolify deploy prep (backend half in
