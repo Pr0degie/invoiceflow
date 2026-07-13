@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "20.x",
-    "npm": "10.x"
+    "node": "24.x",
+    "npm": "11.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -45,7 +45,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.5.2",
