@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
 import { headers } from "next/headers";
-import { refreshAccessToken } from "@/lib/auth/refresh";
+import { refreshAccessToken, revokeRefreshToken } from "@/lib/auth/refresh";
 import { forwardedForHeader } from "@/lib/auth/client-ip";
 import { isAccessTokenFresh } from "@/lib/auth/session-state";
 
@@ -68,6 +68,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // cannot steal what never reaches the client.
       session.error = token.error as "RefreshAccessTokenError" | undefined;
       return session;
+    },
+  },
+  events: {
+    // Auth.js only deletes the session cookie. Revoke the refresh token it
+    // carried as well — otherwise a copy of the cookie (shared machine, stolen
+    // cookie) keeps minting new sessions for up to 30 days after logout.
+    // Covers every sign-out: user menu, settings, sign-out-on-auth-error.
+    async signOut(message) {
+      const refreshToken = "token" in message ? message.token?.refreshToken : undefined;
+      if (refreshToken) {
+        await revokeRefreshToken(refreshToken, await requestForwardedFor());
+      }
     },
   },
   providers: [
