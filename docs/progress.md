@@ -4,6 +4,54 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-09-28 — Deploy-readiness audit + first fixes (both repos)
+
+**Audit.** Security/robustness review of both repos before the first Coolify
+deploy. Verdict: not deploy-ready yet — the open items are listed at the end.
+
+**Dependencies.** CI on main was red at `npm audit` (17 advisories, 3 critical:
+next < 16.3.3, next-auth ≤ beta.31). Now next 16.3.6, next-auth 5.0.0-beta.32,
+shadcn 4.21, postcss override 8.5.28 → 0 vulnerabilities.
+
+**Client IP for the API's rate limits.** Every auth call reached invoice-api from
+the Next server without the browser's IP, so all users shared one 5/min bucket
+(five bad logins locked everyone out; refreshes got 429 → forced logouts).
+`forwardedForHeader()` (last `X-Forwarded-For` entry — the one Traefik appends)
+now goes out on login, both refresh paths, the five `/api/auth/*` handlers and
+the `/api/backend` proxy. invoice-api moved refresh/logout to their own policy
+and trusts the header only from private-network peers.
+
+**API 401s arrive as 401.** Some undici versions (seen on Node 24.14, not 24.21)
+turn a 401 to a streamed request body into "fetch failed": wrong-password logins
+were Auth.js "Configuration" errors, and the proxy answered 502 instead of the
+401 that signs the client out. `bufferedFetch` for server-side openapi-fetch
+calls; the proxy buffers request bodies (responses still stream).
+
+**Sign-out** now revokes the refresh token at invoice-api (`events.signOut`) —
+a copied cookie can't refresh afterwards. **Redirect loop** `/app` ↔
+`/auth/login` for a cookie with a dead refresh token is gone (`hasLiveSession`,
+one shared `isAccessTokenFresh` threshold); the layout redirect keeps the locale.
+
+**Tests.** First frontend unit tests: `npm test` (`node --test` on
+`src/**/*.test.ts`, type stripping — tested modules must not use `@/` imports),
+wired into CI.
+
+**invoice-api side** (details in its progress.md): invoice dates as Europe/Berlin
+calendar days, `curl` + `HEALTHCHECK` in the image, size limits on every request
+DTO + 2 MB body limit (table in `docs/api-contract.md`).
+
+**Verified:** tsc, lint, build, 14 unit tests, 243 API tests, CI green on both
+repos. End to end against the standalone server + local API: per-client buckets,
+client IP on every auth call, `CredentialsSignin` on bad logins, 401 instead of
+502, copied cookie dead after sign-out, loop gone (en + de).
+
+**Open:** backups (GoBD), Impressum/Datenschutz, SMTP provider, where the real
+invoices get finalized (local vs prod numbering); in code: RSC refreshes burn
+single-use refresh tokens, storno double-click race, demo-account abuse, DB
+startup retry, invoice form lacks the new max limits.
+
+---
+
 ## 2026-07-13 — Landing polish + locale-switch console-error fix
 
 **Locale switcher fix.** Switching language triggered a React 19 console error
