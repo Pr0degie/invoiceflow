@@ -293,6 +293,29 @@ interface Invoice {
 }
 ```
 
+### Request limits (create/update body)
+
+Enforced by model validation → `400` naming the field. Limits with a matching
+DB column mirror its length.
+
+| Field | Max |
+|---|---|
+| `senderName`, `recipientName` | 200 chars |
+| `senderAddress`, `recipientAddress` | 500 chars |
+| `recipientStreet` / `recipientPostalCode` / `recipientCity` | 200 / 20 / 100 chars |
+| `recipientCountryCode` | 2 chars |
+| `recipientEmail` | 256 chars |
+| `recipientVatId` / `buyerReference` | 20 / 50 chars |
+| `currency` | 3 chars |
+| `notes` | 4000 chars |
+| `lineItems` | 1–200 items |
+| `lineItems[].description` / `unit` | 2000 / 20 chars |
+| `lineItems[].quantity` | 0.001 – 1,000,000 |
+| `lineItems[].unitPrice` | 0 – 10,000,000 |
+
+Auth bodies: e-mail 256, name 200, passwords 128 (login included), tokens 256,
+`locale` 10 chars. Any request body over **2 MB** is rejected with `413`.
+
 ---
 
 ## Error shape
@@ -303,8 +326,8 @@ hardening pass — errors are now produced by a central middleware, same shape).
 `409` conflict (non-draft edit/delete, delete of a reopened draft that owns a
 number, forbidden status transition, finalize with incomplete tax profile or
 missing service date, cancel of a non-Finalized invoice, reopen of a
-Paid/Cancelled/Cancellation invoice, email already registered), `429`
-rate-limited.
+Paid/Cancelled/Cancellation invoice, email already registered), `413` body
+over 2 MB, `429` rate-limited.
 
 ---
 

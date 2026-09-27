@@ -1215,47 +1215,58 @@
         "type": "object",
         "properties": {
           "senderName": {
+            "maxLength": 200,
             "minLength": 1,
             "type": "string"
           },
           "senderAddress": {
+            "maxLength": 500,
             "minLength": 1,
             "type": "string"
           },
           "recipientName": {
+            "maxLength": 200,
             "minLength": 1,
             "type": "string"
           },
           "recipientAddress": {
+            "maxLength": 500,
             "type": "string",
             "nullable": true
           },
           "recipientStreet": {
+            "maxLength": 200,
             "type": "string",
             "nullable": true
           },
           "recipientPostalCode": {
+            "maxLength": 20,
             "type": "string",
             "nullable": true
           },
           "recipientCity": {
+            "maxLength": 100,
             "type": "string",
             "nullable": true
           },
           "recipientCountryCode": {
+            "maxLength": 2,
             "type": "string",
             "nullable": true
           },
           "recipientEmail": {
+            "maxLength": 256,
             "type": "string",
             "format": "email",
             "nullable": true
           },
           "recipientVatId": {
+            "maxLength": 20,
             "type": "string",
             "nullable": true
           },
           "buyerReference": {
+            "maxLength": 50,
             "type": "string",
             "nullable": true
           },
@@ -1285,6 +1296,7 @@
             "nullable": true
           },
           "lineItems": {
+            "maxItems": 200,
             "minItems": 1,
             "type": "array",
             "items": {
@@ -1298,10 +1310,12 @@
             "format": "double"
           },
           "currency": {
+            "maxLength": 3,
             "type": "string",
             "nullable": true
           },
           "notes": {
+            "maxLength": 4000,
             "type": "string",
             "nullable": true
           }
@@ -1315,20 +1329,24 @@
         "type": "object",
         "properties": {
           "description": {
+            "maxLength": 2000,
             "minLength": 1,
             "type": "string"
           },
           "quantity": {
+            "maximum": 1000000,
             "minimum": 0.001,
             "type": "number",
             "format": "double"
           },
           "unitPrice": {
+            "maximum": 10000000,
             "minimum": 0,
             "type": "number",
             "format": "double"
           },
           "unit": {
+            "maxLength": 20,
             "type": "string",
             "nullable": true
           },
@@ -1636,7 +1654,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": {}
+        "additionalProperties": { }
       },
       "RefreshRequestDto": {
         "type": "object",
@@ -1933,7 +1951,7 @@
   },
   "security": [
     {
-      "Bearer": []
+      "Bearer": [ ]
     }
   ]
 }
