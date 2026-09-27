@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api/client";
 import { headers } from "next/headers";
 import { refreshAccessToken } from "@/lib/auth/refresh";
 import { forwardedForHeader } from "@/lib/auth/client-ip";
+import { isAccessTokenFresh } from "@/lib/auth/session-state";
 
 /**
  * Thrown when the backend rejects login with 403 `email_not_verified`. The
@@ -50,11 +51,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // On subsequent requests, check if the invoice-api access token is still valid.
-      if (!token.accessToken || !token.accessTokenExpires) return token;
-
-      const expiresAt = new Date(token.accessTokenExpires as string).getTime();
-      if (Date.now() < expiresAt - 30_000) {
-        // Token still valid (with 30 s buffer).
+      if (!token.accessToken || isAccessTokenFresh(token.accessTokenExpires)) {
         return token;
       }
 

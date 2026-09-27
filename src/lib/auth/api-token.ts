@@ -1,6 +1,7 @@
 import { getToken, type JWT } from "next-auth/jwt";
 import { refreshAccessToken } from "@/lib/auth/refresh";
 import { forwardedForHeader } from "@/lib/auth/client-ip";
+import { isAccessTokenFresh } from "@/lib/auth/session-state";
 
 /**
  * Server-only access to the invoice-api access token stored inside the
@@ -55,8 +56,8 @@ const inflightRefresh = new Map<string, Promise<JWT>>();
 
 /**
  * Reads the invoice-api access token from the session cookie, refreshing it
- * server-side against the API when expired (same 30 s buffer as the jwt()
- * callback in src/lib/auth.ts). Returns null when there is no session or the
+ * server-side against the API when expired (isAccessTokenFresh — the same
+ * 30 s buffer the jwt() callback uses). Returns null when there is no session or the
  * refresh failed — callers should respond 401 so the client's existing
  * sign-out-on-auth-error handling kicks in.
  */
@@ -70,9 +71,7 @@ export async function getApiToken(
   });
   if (!token?.accessToken) return null;
 
-  if (!token.accessTokenExpires) return { accessToken: token.accessToken };
-  const expiresAt = new Date(token.accessTokenExpires).getTime();
-  if (Date.now() < expiresAt - 30_000) {
+  if (isAccessTokenFresh(token.accessTokenExpires)) {
     return { accessToken: token.accessToken };
   }
 
