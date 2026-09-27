@@ -138,7 +138,9 @@ user's refresh tokens (theft signal) → 401. All `/api/auth/*` write endpoints 
 All return the entity directly — not wrapped in `{ invoice }` or `{ data }`.
 
 ```
-GET    /api/invoices                    → Invoice[]   ← FLAT ARRAY, no pagination
+GET    /api/invoices                    → Invoice[]   ← flat array, PAGINATED:
+  ?page=<n> (default 1) & ?pageSize=<n> (default 25, max 100); no total count —
+  read pages until one comes back shorter than pageSize
   ?status=Draft|Finalized|Paid|Cancelled|Overdue   ← "Overdue" is a VIRTUAL filter
                                                       (Finalized past due date)
   ?search=<text>
