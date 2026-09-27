@@ -28,17 +28,27 @@ function throwOnError(
   if (error) throw new ApiError(result.response.status, error);
 }
 
+// GET /api/invoices is paginated server-side (pageSize max 100, no total
+// count), but the list view and dashboard work on the FULL result — so read
+// every page until one comes back short.
+const LIST_PAGE_SIZE = 100;
+
 export function useInvoices(filters: InvoiceListFilters = {}) {
   const authed = useAuthed();
 
   return useQuery({
     queryKey: queryKeys.invoices.list(filters),
     queryFn: async () => {
-      const result = await apiClient.GET("/api/invoices", {
-        params: { query: filters },
-      });
-      throwOnError(result, result.error);
-      return result.data as Invoice[];
+      const all: Invoice[] = [];
+      for (let page = 1; ; page++) {
+        const result = await apiClient.GET("/api/invoices", {
+          params: { query: { ...filters, page, pageSize: LIST_PAGE_SIZE } },
+        });
+        throwOnError(result, result.error);
+        const batch = result.data as Invoice[];
+        all.push(...batch);
+        if (batch.length < LIST_PAGE_SIZE) return all;
+      }
     },
     enabled: authed,
   });

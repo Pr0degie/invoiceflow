@@ -71,8 +71,11 @@ export function InvoiceListView() {
 
   const [searchInput, setSearchInput] = useState(q);
 
-  // Debounce search input → URL
+  // Debounce search input → URL. Skip when the input already matches the URL
+  // (mount, external reset) — otherwise it drops ?page and a reload on page 2
+  // jumps back to page 1.
   useEffect(() => {
+    if (searchInput === q) return;
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
       if (searchInput) {

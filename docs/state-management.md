@@ -43,7 +43,7 @@ export const queryKeys = {
 Components import only from `src/lib/api/hooks/` — never `apiClient` directly.
 
 Available hooks:
-- `useInvoices(filters?)` — list
+- `useInvoices(filters?)` — list (reads every server page — the endpoint is paginated; views paginate client-side)
 - `useInvoice(id)` — single
 - `useStats(range?)` — dashboard KPIs
 - `useCreateInvoice()` — mutation
