@@ -21,9 +21,9 @@ import { forwardedForHeader } from "@/lib/auth/client-ip";
  * - Supports GET/POST/PUT/PATCH/DELETE.
  * - Streams response bodies through untouched — binary responses (PDF/XML
  *   download & preview) work without buffering. Request bodies ARE buffered:
- *   undici turns a 401 answer to a streamed body into "fetch failed", which
- *   surfaced as 502 instead of the 401 that signs the client out (bodies are
- *   small — invoice-api rejects anything over 2 MB).
+ *   some undici versions (seen on Node 24.14) turn a 401 answer to a streamed
+ *   body into "fetch failed", which surfaced as 502 instead of the 401 that
+ *   signs the client out (bodies are small — invoice-api rejects > 2 MB).
  * - Status codes and error bodies pass through unchanged, so a backend 401
  *   (expired session, deleted account) still reaches the client and triggers
  *   the existing sign-out-on-auth-error handling.

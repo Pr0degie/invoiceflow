@@ -38,10 +38,6 @@ function streamedPost(): Request {
   } as RequestInit & { duplex: "half" });
 }
 
-test("undici turns a 401 to a streamed body into a network error (why bufferedFetch exists)", async () => {
-  await assert.rejects(fetch(streamedPost()), /fetch failed/);
-});
-
 test("passes the 401 through when the body arrives as a stream", async () => {
   const response = await bufferedFetch(streamedPost());
 
