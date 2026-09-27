@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resendVerificationSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 // Anti-enumeration mirror (same reasoning as forgot-password): the backend
 // always answers 200 with a generic message whether or not the address exists
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { response } = await apiClient.POST("/api/auth/resend-verification", {
+      headers: forwardedForHeader(req.headers),
       body: { email: parsed.data.email, locale: parsed.data.locale },
     });
 

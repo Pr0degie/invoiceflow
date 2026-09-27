@@ -5,10 +5,16 @@ import { apiClient } from "@/lib/api/client";
  * Called inside NextAuth's jwt() callback when the access token has expired.
  * Exchanges the refresh token for a new access token transparently.
  * Runs server-side only — the client never touches refresh tokens directly.
+ * `forwardedFor` carries the browser's IP (see forwardedForHeader) so the
+ * API rate-limits refreshes per client, not per Next.js server.
  */
-export async function refreshAccessToken(token: JWT): Promise<JWT> {
+export async function refreshAccessToken(
+  token: JWT,
+  forwardedFor: Record<string, string> = {}
+): Promise<JWT> {
   try {
     const { data, error } = await apiClient.POST("/api/auth/refresh", {
+      headers: forwardedFor,
       body: { refreshToken: token.refreshToken as string },
     });
 

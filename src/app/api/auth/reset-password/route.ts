@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resetPasswordSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 // Unlike forgot-password this DOES surface distinct outcomes — the user is
 // acting on a concrete token and needs to know if it is dead.
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { response } = await apiClient.POST("/api/auth/reset-password", {
+      headers: forwardedForHeader(req.headers),
       body: {
         token: parsed.data.token,
         newPassword: parsed.data.newPassword,

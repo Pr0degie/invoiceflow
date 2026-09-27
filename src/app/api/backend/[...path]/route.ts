@@ -6,6 +6,7 @@ import {
   isSecureRequest,
   sessionCookieName,
 } from "@/lib/auth/api-token";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 /**
  * Auth proxy for invoice-api.
@@ -18,8 +19,11 @@ import {
  * `NEXT_PUBLIC_API_BASE_URL` as local-dev fallback).
  *
  * - Supports GET/POST/PUT/PATCH/DELETE.
- * - Streams request and response bodies through untouched — binary responses
- *   (PDF/XML download & preview) work without buffering.
+ * - Streams response bodies through untouched — binary responses (PDF/XML
+ *   download & preview) work without buffering. Request bodies ARE buffered:
+ *   undici turns a 401 answer to a streamed body into "fetch failed", which
+ *   surfaced as 502 instead of the 401 that signs the client out (bodies are
+ *   small — invoice-api rejects anything over 2 MB).
  * - Status codes and error bodies pass through unchanged, so a backend 401
  *   (expired session, deleted account) still reaches the client and triggers
  *   the existing sign-out-on-auth-error handling.
@@ -72,19 +76,23 @@ async function proxy(
     if (value) headers.set(name, value);
   }
   headers.set("authorization", `Bearer ${tokenResult.accessToken}`);
+  // The browser's IP, for the API's per-client limits (e.g. change-password)
+  for (const [name, value] of Object.entries(forwardedForHeader(req.headers))) {
+    headers.set(name, value);
+  }
 
   let upstream: Response;
   try {
     upstream = await fetch(target, {
       method: req.method,
       headers,
-      body: req.method === "GET" || req.method === "HEAD" ? undefined : req.body,
+      body:
+        req.method === "GET" || req.method === "HEAD"
+          ? undefined
+          : await req.arrayBuffer(),
       cache: "no-store",
       redirect: "manual",
-      // Streaming request bodies require half-duplex (undici); the field is
-      // missing from the RequestInit type.
-      duplex: "half",
-    } as RequestInit & { duplex: "half" });
+    });
   } catch {
     return NextResponse.json(
       { error: "Backend unreachable" },

@@ -29,6 +29,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Test
+        run: npm test
+
       # Gate on high+ only: moderate advisories in framework-pinned transitive
       # deps (e.g. postcss via next) have no non-breaking fix and would make
       # the pipeline permanently red.

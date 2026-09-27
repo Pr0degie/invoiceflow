@@ -1,5 +1,6 @@
 import createClient from "openapi-fetch";
 import type { paths } from "./schema";
+import { bufferedFetch } from "./buffered-fetch";
 
 /**
  * Typed API client for invoice-api.
@@ -18,14 +19,18 @@ import type { paths } from "./schema";
 // inlined at build time, so in the Docker image only a runtime variable can
 // point at the deployed backend. NEXT_PUBLIC_API_BASE_URL stays as the local
 // dev fallback (.env).
-const baseUrl =
-  typeof window === "undefined"
-    ? (process.env.API_BASE_URL ??
-      process.env.NEXT_PUBLIC_API_BASE_URL ??
-      "http://localhost:8080")
-    : "/api/backend";
+const isServer = typeof window === "undefined";
+const baseUrl = isServer
+  ? (process.env.API_BASE_URL ??
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    "http://localhost:8080")
+  : "/api/backend";
 
-export const apiClient = createClient<paths>({ baseUrl });
+// Server-side calls send buffered bodies — see bufferedFetch for the 401 case.
+export const apiClient = createClient<paths>({
+  baseUrl,
+  fetch: isServer ? bufferedFetch : undefined,
+});
 
 /**
  * Convenience: build the Authorization header value from a token string.

@@ -1,5 +1,6 @@
 import { getToken, type JWT } from "next-auth/jwt";
 import { refreshAccessToken } from "@/lib/auth/refresh";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 /**
  * Server-only access to the invoice-api access token stored inside the
@@ -80,7 +81,7 @@ export async function getApiToken(
   const key = token.refreshToken ?? "";
   let pending = inflightRefresh.get(key);
   if (!pending) {
-    pending = refreshAccessToken(token).finally(() =>
+    pending = refreshAccessToken(token, forwardedForHeader(headers)).finally(() =>
       inflightRefresh.delete(key)
     );
     inflightRefresh.set(key, pending);
