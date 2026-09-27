@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyEmailSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 // Consumes the verification token. Distinct outcomes are intentional here —
 // the token is opaque, so success/failure reveals nothing about which address
@@ -18,6 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { response } = await apiClient.POST("/api/auth/verify-email", {
+      headers: forwardedForHeader(req.headers),
       body: { token: parsed.data.token },
     });
 

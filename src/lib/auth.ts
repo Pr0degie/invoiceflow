@@ -2,7 +2,9 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
+import { headers } from "next/headers";
 import { refreshAccessToken } from "@/lib/auth/refresh";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 /**
  * Thrown when the backend rejects login with 403 `email_not_verified`. The
@@ -12,6 +14,20 @@ import { refreshAccessToken } from "@/lib/auth/refresh";
  */
 class EmailNotVerifiedError extends CredentialsSignin {
   code = "email_not_verified";
+}
+
+/**
+ * jwt() receives no request object. It runs inside a route handler
+ * (/api/auth/session) or a server component's auth() call, where the incoming
+ * headers are still reachable via next/headers — outside a request scope that
+ * throws, and the refresh simply goes out without a client IP.
+ */
+async function requestForwardedFor(): Promise<Record<string, string>> {
+  try {
+    return forwardedForHeader(await headers());
+  } catch {
+    return {};
+  }
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -43,7 +59,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // Token expired — attempt silent refresh.
-      return refreshAccessToken(token);
+      return refreshAccessToken(token, await requestForwardedFor());
     },
 
     async session({ session, token }) {
@@ -59,13 +75,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   providers: [
     Credentials({
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
         const { data, error, response } = await apiClient.POST(
           "/api/auth/login",
           {
+            headers: forwardedForHeader(request.headers),
             body: {
               email: parsed.data.email,
               password: parsed.data.password,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { forgotPasswordSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 // Anti-enumeration: this route NEVER reveals whether the address exists.
 // The backend already answers 200 with a generic message for known and unknown
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { response } = await apiClient.POST("/api/auth/forgot-password", {
+      headers: forwardedForHeader(req.headers),
       body: { email: parsed.data.email, locale: parsed.data.locale },
     });
 

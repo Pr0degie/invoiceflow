@@ -6,6 +6,7 @@ import {
   isSecureRequest,
   sessionCookieName,
 } from "@/lib/auth/api-token";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 /**
  * Auth proxy for invoice-api.
@@ -72,6 +73,10 @@ async function proxy(
     if (value) headers.set(name, value);
   }
   headers.set("authorization", `Bearer ${tokenResult.accessToken}`);
+  // The browser's IP, for the API's per-client limits (e.g. change-password)
+  for (const [name, value] of Object.entries(forwardedForHeader(req.headers))) {
+    headers.set(name, value);
+  }
 
   let upstream: Response;
   try {

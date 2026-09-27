@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registerSchema } from "@/lib/schemas/auth";
 import { apiClient } from "@/lib/api/client";
+import { forwardedForHeader } from "@/lib/auth/client-ip";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,6 +18,7 @@ export async function POST(req: NextRequest) {
     const { name, email, password, locale } = parsed.data;
 
     const { error, response } = await apiClient.POST("/api/auth/register", {
+      headers: forwardedForHeader(req.headers),
       body: { name, email, password, locale },
     });
 
