@@ -93,8 +93,11 @@ invoice-api — never through the proxy itself.
 
 Three layers end a dead session instead of failing silently:
 
-1. **Server:** the `(app)` layout redirects to login when `session.error` is set
-   (only runs on navigation).
+1. **Server:** the `(app)` layout redirects to the (locale-aware) login when
+   `session.error` is set (only runs on navigation). `proxy.ts` bounces
+   `/auth/*` to `/app` only for a session proven live (`hasLiveSession`: no
+   recorded refresh error, access token fresh) — a cookie with a dead refresh
+   token would otherwise ping-pong between the two redirects forever.
 2. **Client, session-driven:** `SessionGuard` (mounted in `Providers`) watches
    `useSession()` and calls `signOut({ callbackUrl: "/auth/login" })` when
    `session.error === "RefreshAccessTokenError"`.
@@ -104,6 +107,11 @@ Three layers end a dead session instead of failing silently:
 
 All three funnel through `signOutOnAuthError()`
 (`src/lib/auth/sign-out-on-auth-error.ts`), which dedupes concurrent triggers.
+
+**Every sign-out revokes the refresh token** at invoice-api
+(`POST /api/auth/logout`, via `events.signOut` in `src/lib/auth.ts`), so a
+copied cookie can't refresh afterwards. Its access token stays valid until it
+expires (≤ 15 min) — a stateless JWT can't be revoked earlier.
 
 ---
 

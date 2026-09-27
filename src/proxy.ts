@@ -3,6 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
 import { authSecret, isSecureRequest } from "@/lib/auth/api-token";
+import { hasLiveSession } from "@/lib/auth/session-state";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -44,13 +45,15 @@ export default async function proxy(req: NextRequest) {
       secret: authSecret(),
       secureCookie: isSecureRequest(req.headers),
     });
-    const isLoggedIn = !!token;
-
-    if (isAuthRoute && isLoggedIn) {
+    // Bounce away from /auth only on a session proven live: a cookie whose
+    // refresh token died would otherwise ping-pong with the (app) layout,
+    // which sends failed refreshes to /auth/login. /app itself only needs a
+    // cookie — the layout refreshes an expired access token.
+    if (isAuthRoute && hasLiveSession(token)) {
       return NextResponse.redirect(new URL(`${localePrefix}/app`, nextUrl));
     }
 
-    if (isApp && !isLoggedIn) {
+    if (isApp && !token) {
       return NextResponse.redirect(
         new URL(`${localePrefix}/auth/login`, nextUrl)
       );

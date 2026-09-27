@@ -33,3 +33,21 @@ export async function refreshAccessToken(
     return { ...token, error: "RefreshAccessTokenError" };
   }
 }
+
+/**
+ * Revokes a refresh token at invoice-api (logout). Never throws: a failed
+ * revoke (API down, token already dead) must not keep the user signed in.
+ */
+export async function revokeRefreshToken(
+  refreshToken: string,
+  forwardedFor: Record<string, string> = {}
+): Promise<void> {
+  try {
+    await apiClient.POST("/api/auth/logout", {
+      headers: forwardedFor,
+      body: { refreshToken },
+    });
+  } catch {
+    // Signing out locally still happens; the token expires on its own.
+  }
+}
