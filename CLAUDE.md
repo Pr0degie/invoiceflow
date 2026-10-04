@@ -115,7 +115,34 @@ Stop and ask when:
 
 ---
 
-## §8 Reference docs (read only when working on that subsystem)
+## §8 Open follow-ups
+
+Tracked here so the next session picks the right one. History and detail:
+`docs/progress.md`. Backend items: `../invoice-api/CLAUDE.md` §7.
+
+Need a decision from Tobias before any code:
+
+- [ ] **Deploy blockers:** off-box database backups + restore drill; Impressum /
+      Datenschutz / AGB (footer and register links are `href="#"` — never invent
+      legal text); SMTP provider; which instance is the system of record for
+      real invoices.
+- [ ] **Demo data never resets** — the account is protected, its invoices and
+      profile are not.
+- [ ] **Register form reveals registered addresses** (409 → "already
+      registered"). Switch to a generic answer together with SMTP.
+- [ ] **Invoice form validation messages are hardcoded English**
+      (`src/lib/schemas/invoice-form.ts`) — violates the next-intl rule.
+- [ ] **Currencies:** the form offers USD/CHF, the XRechnung always says EUR.
+
+Waiting on upstream:
+
+- [ ] **braces advisory GHSA-vfj7-8cjw-p6xm** (dev tooling only, no patched
+      release) — CI reports it without failing. Re-check `npm audit`; once it
+      is clean, the report-only step can gate again.
+
+---
+
+## §9 Reference docs (read only when working on that subsystem)
 
 | Topic | File |
 |---|---|
