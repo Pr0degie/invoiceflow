@@ -34,7 +34,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, isDemoAccountError } from "@/lib/api/errors";
 import { useMe, useUpdateProfile, useChangePassword, useDeleteAccount } from "@/lib/api/hooks/useMe";
 
 const TABS = ["profile", "sender", "tax", "security", "language"] as const;
@@ -517,7 +517,9 @@ function SecurityTab() {
           return;
         }
       }
-      toast.error(t("security.error"));
+      toast.error(
+        isDemoAccountError(err) ? t("demoAccountLocked") : t("security.error")
+      );
     }
   }
 
@@ -665,8 +667,10 @@ function DangerZone() {
     try {
       await deleteAccount.mutateAsync();
       await signOut({ callbackUrl: "/auth/login" });
-    } catch {
-      toast.error(t("danger.error"));
+    } catch (err) {
+      toast.error(
+        isDemoAccountError(err) ? t("demoAccountLocked") : t("danger.error")
+      );
     }
   }
 

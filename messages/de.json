@@ -594,6 +594,7 @@
         "saved": "Absenderdaten gespeichert.",
         "error": "Absenderdaten konnten nicht gespeichert werden."
       },
+      "demoAccountLocked": "Im Demo-Konto nicht möglich – diesen Zugang teilen sich alle.",
       "security": {
         "title": "Passwort ändern",
         "description": "Verwende ein starkes, einzigartiges Passwort.",

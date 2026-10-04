@@ -594,6 +594,7 @@
         "saved": "Sender defaults updated.",
         "error": "Could not save sender defaults."
       },
+      "demoAccountLocked": "Not available in the demo account — everyone shares this login.",
       "security": {
         "title": "Change password",
         "description": "Use a strong, unique password.",

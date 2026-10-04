@@ -45,8 +45,8 @@ POST   /api/auth/verify-email          { token }                         → 204
 POST   /api/auth/resend-verification   { email, locale? }                → 200 MessageResponse   (always, generic)
 GET    /api/auth/me                                                      → UserDto
 PATCH  /api/auth/me                    (any subset of UserDto's editable fields) → UserDto
-DELETE /api/auth/me                                                      → 204   (deletes the account)
-POST   /api/auth/change-password       { currentPassword, newPassword }  → 204
+DELETE /api/auth/me                                                      → 204   (deletes the account) | 403 demo_account_readonly
+POST   /api/auth/change-password       { currentPassword, newPassword }  → 204 | 403 demo_account_readonly
 POST   /api/auth/logout                { refreshToken }                  → 204
 ```
 
@@ -177,6 +177,7 @@ POST   /api/invoices/{id}/reopen        → Invoice     (Finalized only)
 
 POST   /api/invoices/{id}/cancel        → Invoice     (the new Stornorechnung)
   Finalized only (Paid must be set back to Finalized first — 409 otherwise).
+  One storno per invoice: concurrent calls (double click) → one 200, the rest 409.
   Creates a Cancellation-type invoice (own sequential number, negated amounts,
   reference to the original) and sets the original to Cancelled (terminal).
 
