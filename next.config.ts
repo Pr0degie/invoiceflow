@@ -53,6 +53,8 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the Docker image (node server.js) —
   // the runtime stage copies .next/standalone + .next/static + public only.
   output: "standalone",
+  // No "X-Powered-By: Next.js" — nothing needs it, scanners use it.
+  poweredByHeader: false,
   allowedDevOrigins: ["192.168.178.30"],
   experimental: {
     serverActions: {

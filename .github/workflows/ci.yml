@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Weekly, so a newly published advisory turns the audit red even when
+  # nobody pushes.
+  schedule:
+    - cron: "0 5 * * 1"
 
 jobs:
   build:
@@ -34,12 +38,30 @@ jobs:
 
       # Gate on high+ only: moderate advisories in framework-pinned transitive
       # deps (e.g. postcss via next) have no non-breaking fix and would make
-      # the pipeline permanently red.
-      - name: Audit dependencies (high and above)
-        run: npm audit --audit-level=high
+      # the pipeline permanently red. Production deps only: what ships is what
+      # the gate protects. Dev tooling is reported below without failing the
+      # build — GHSA-vfj7-8cjw-p6xm (braces, via the shadcn CLI and eslint) has
+      # no patched release, so gating on it could only be fixed by waiting.
+      - name: Audit production dependencies (high and above)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Audit dev tooling (report only)
+        run: npm audit --audit-level=high || true
 
       - name: Production build
         run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # The image is what Coolify deploys — a Dockerfile that stopped building
+      # would otherwise only show up there.
+      - name: Build image
+        run: docker build -t invoiceflow:ci .
 
   mcp:
     runs-on: ubuntu-latest

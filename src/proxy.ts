@@ -1,9 +1,13 @@
 import createMiddleware from "next-intl/middleware";
-import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "@/i18n/routing";
-import { authSecret, isSecureRequest } from "@/lib/auth/api-token";
-import { hasLiveSession } from "@/lib/auth/session-state";
+import {
+  isSecureRequest,
+  readSessionToken,
+  refreshSession,
+  sessionCookie,
+} from "@/lib/auth/api-token";
+import { hasLiveSession, shouldRefreshSession } from "@/lib/auth/session-state";
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -19,10 +23,10 @@ const intlMiddleware = createMiddleware(routing);
  * state for the route gates below is read directly from the JWT cookie
  * instead; this check is UX-only (the API authorizes every call itself).
  *
- * Trade-off vs. the wrapper: the proxy no longer refreshes an expired access
- * token during navigations. Refresh happens in the auth-proxy route handler
- * (persisted) and in getApiToken() for server components (not persisted —
- * covered by the backend's 60 s refresh-rotation grace window).
+ * The proxy is also the ONLY place a page navigation refreshes an expired
+ * access token: it can write the rotated session cookie, server components
+ * can't (see readApiToken). The refreshed JWT goes onto the request as well,
+ * so the render that follows already sees it.
  */
 export default async function proxy(req: NextRequest) {
   const { nextUrl } = req;
@@ -39,28 +43,37 @@ export default async function proxy(req: NextRequest) {
   const isAuthRoute = pathWithoutLocale.startsWith("/auth");
   const isApp = pathWithoutLocale.startsWith("/app");
 
-  if (isAuthRoute || isApp) {
-    const token = await getToken({
-      req,
-      secret: authSecret(),
-      secureCookie: isSecureRequest(req.headers),
-    });
-    // Bounce away from /auth only on a session proven live: a cookie whose
-    // refresh token died would otherwise ping-pong with the (app) layout,
-    // which sends failed refreshes to /auth/login. /app itself only needs a
-    // cookie — the layout refreshes an expired access token.
-    if (isAuthRoute && hasLiveSession(token)) {
-      return NextResponse.redirect(new URL(`${localePrefix}/app`, nextUrl));
-    }
+  if (!isAuthRoute && !isApp) return intlMiddleware(req);
 
-    if (isApp && !token) {
-      return NextResponse.redirect(
-        new URL(`${localePrefix}/auth/login`, nextUrl)
-      );
+  let token = await readSessionToken(req.headers);
+  let rotated: Awaited<ReturnType<typeof sessionCookie>> | undefined;
+  if (token && shouldRefreshSession(token)) {
+    token = await refreshSession(token, req.headers);
+    if (!token.error) {
+      rotated = await sessionCookie(token, isSecureRequest(req.headers));
+      req.cookies.set(rotated.name, rotated.value);
     }
   }
 
-  return intlMiddleware(req);
+  // Bounce away from /auth only on a session proven live, and into /app only
+  // with one: a cookie whose refresh token died gets the login page instead
+  // of ping-ponging between the two redirects.
+  const live = hasLiveSession(token);
+  let response: NextResponse;
+  if (isAuthRoute && live) {
+    response = NextResponse.redirect(new URL(`${localePrefix}/app`, nextUrl));
+  } else if (isApp && !live) {
+    response = NextResponse.redirect(
+      new URL(`${localePrefix}/auth/login`, nextUrl)
+    );
+  } else {
+    response = intlMiddleware(req);
+  }
+
+  if (rotated) {
+    response.cookies.set(rotated.name, rotated.value, rotated.options);
+  }
+  return response;
 }
 
 export const config = {

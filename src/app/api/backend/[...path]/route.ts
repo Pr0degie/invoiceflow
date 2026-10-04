@@ -1,10 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { encode } from "next-auth/jwt";
 import {
-  authSecret,
   getApiToken,
   isSecureRequest,
-  sessionCookieName,
+  sessionCookie,
 } from "@/lib/auth/api-token";
 import { forwardedForHeader } from "@/lib/auth/client-ip";
 
@@ -39,10 +37,6 @@ const API_BASE = (
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   "http://localhost:8080"
 ).replace(/\/+$/, "");
-
-// 30 days — NextAuth's default JWT session maxAge, which src/lib/auth.ts
-// does not override.
-const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
 // Only forward what the backend actually consumes — no cookies, no
 // browser fingerprint headers.
@@ -115,21 +109,11 @@ async function proxy(
   // Persist a rotated session JWT so the single-use refresh token in the old
   // cookie is not reused later (which would kill all of the user's sessions).
   if (tokenResult.refreshedJwt) {
-    const secure = isSecureRequest(req.headers);
-    const cookieName = sessionCookieName(secure);
-    const value = await encode({
-      token: tokenResult.refreshedJwt,
-      secret: authSecret(),
-      salt: cookieName,
-      maxAge: SESSION_MAX_AGE,
-    });
-    response.cookies.set(cookieName, value, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure,
-      path: "/",
-      maxAge: SESSION_MAX_AGE,
-    });
+    const cookie = await sessionCookie(
+      tokenResult.refreshedJwt,
+      isSecureRequest(req.headers)
+    );
+    response.cookies.set(cookie.name, cookie.value, cookie.options);
   }
 
   return response;

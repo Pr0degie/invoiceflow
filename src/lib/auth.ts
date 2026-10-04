@@ -18,10 +18,13 @@ class EmailNotVerifiedError extends CredentialsSignin {
 }
 
 /**
- * jwt() receives no request object. It runs inside a route handler
- * (/api/auth/session) or a server component's auth() call, where the incoming
- * headers are still reachable via next/headers — outside a request scope that
- * throws, and the refresh simply goes out without a client IP.
+ * jwt() receives no request object. It runs inside the Auth.js route handlers
+ * (/api/auth/session & co.), where the incoming headers are still reachable
+ * via next/headers — outside a request scope that throws, and the refresh
+ * simply goes out without a client IP.
+ *
+ * Do NOT call `auth()` from server components: it runs jwt() too, but can't
+ * persist the rotated refresh token there. Use getSessionUser / readApiToken.
  */
 async function requestForwardedFor(): Promise<Record<string, string>> {
   try {
@@ -36,7 +39,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
-    error: "/auth/error",
+    // Auth.js redirects here with ?error=… on its own failures (bad CSRF
+    // token, misconfiguration). There is no separate error page — a
+    // nonexistent path would be a 404.
+    error: "/auth/login",
   },
   callbacks: {
     async jwt({ token, user }) {

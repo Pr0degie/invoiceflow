@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { auth } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/server-session";
 import { DashboardView } from "@/components/app/dashboard-view";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,11 +27,11 @@ function DashboardSkeleton() {
 }
 
 export default async function OverviewPage() {
-  const session = await auth();
+  const user = await getSessionUser();
 
   return (
     <Suspense fallback={<DashboardSkeleton />}>
-      <DashboardView userName={session?.user?.name} />
+      <DashboardView userName={user?.name} />
     </Suspense>
   );
 }

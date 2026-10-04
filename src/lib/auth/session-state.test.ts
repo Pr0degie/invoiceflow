@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { hasLiveSession, isAccessTokenFresh } from "./session-state.ts";
+import { hasLiveSession, isAccessTokenFresh, shouldRefreshSession } from "./session-state.ts";
 
 const NOW = Date.parse("2026-09-28T12:00:00Z");
 const inMinutes = (m: number) => new Date(NOW + m * 60_000).toISOString();
@@ -41,4 +41,35 @@ test("a cookie that recorded a failed refresh is not live", () => {
     hasLiveSession({ accessTokenExpires: inMinutes(5), error: "RefreshAccessTokenError" }, NOW),
     false
   );
+});
+
+test("an expired access token with a refresh token should be refreshed", () => {
+  assert.equal(
+    shouldRefreshSession({ accessTokenExpires: inMinutes(-1), refreshToken: "r" }, NOW),
+    true
+  );
+});
+
+test("a fresh access token is left alone", () => {
+  assert.equal(
+    shouldRefreshSession({ accessTokenExpires: inMinutes(5), refreshToken: "r" }, NOW),
+    false
+  );
+});
+
+test("a cookie that recorded a failed refresh is not refreshed again", () => {
+  // Its refresh token is dead — retrying on every navigation only burns the
+  // API's rate limit
+  assert.equal(
+    shouldRefreshSession(
+      { accessTokenExpires: inMinutes(-1), refreshToken: "r", error: "RefreshAccessTokenError" },
+      NOW
+    ),
+    false
+  );
+});
+
+test("without a refresh token there is nothing to refresh with", () => {
+  assert.equal(shouldRefreshSession({ accessTokenExpires: inMinutes(-1) }, NOW), false);
+  assert.equal(shouldRefreshSession(null, NOW), false);
 });

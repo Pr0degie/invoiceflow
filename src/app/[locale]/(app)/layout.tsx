@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth/server-session";
 import { redirect } from "@/i18n/navigation";
 import { AppShell } from "@/components/app/app-shell";
 
@@ -9,20 +9,20 @@ export default async function AppLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  const session = await auth();
+  const user = await getSessionUser();
   const { locale } = await params;
 
-  // Locale-aware: a /de user whose session died lands on the German login.
-  // proxy.ts lets a dead session through to /auth (hasLiveSession), so this
-  // redirect can't bounce back.
-  if (!session?.user || session.error === "RefreshAccessTokenError") {
+  // proxy.ts already sends dead sessions to the login; this is the backstop
+  // should a request ever reach the layout without passing it. Locale-aware,
+  // and no bounce: the proxy lets a dead session through to /auth.
+  if (!user) {
     return redirect({ href: "/auth/login", locale });
   }
 
   return (
     <AppShell
-      userName={session.user.name}
-      userEmail={session.user.email}
+      userName={user.name}
+      userEmail={user.email}
       locale={locale}
     >
       {children}

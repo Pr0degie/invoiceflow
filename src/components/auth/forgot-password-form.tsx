@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { z } from "zod";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,13 +59,14 @@ export function ForgotPasswordForm() {
         <Alert className="border-primary/30 bg-primary/5 text-primary [&>svg]:text-primary">
           <AlertDescription>{t("sent")}</AlertDescription>
         </Alert>
-        <Link
-          href="/auth/login"
-          className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="size-4" />
-          {t("backToLogin")}
-        </Link>
+        <p className="text-center text-sm text-muted-foreground">
+          <Link
+            href="/auth/login"
+            className="text-foreground font-medium hover:text-primary transition-colors underline underline-offset-2"
+          >
+            {t("backToLogin")}
+          </Link>
+        </p>
       </div>
     );
   }

@@ -1,12 +1,12 @@
 import { headers } from "next/headers";
-import { getApiToken } from "@/lib/auth/api-token";
+import { readApiToken } from "@/lib/auth/api-token";
 import { apiClient, bearerHeader } from "@/lib/api/client";
 import { InvoiceFormCreate } from "@/components/app/invoice-form";
 
 export default async function NewInvoicePage() {
   // Server component: read the invoice-api token from the server-only JWT
   // (it is no longer exposed on the session) and call the backend directly.
-  const token = (await getApiToken(await headers()))?.accessToken;
+  const token = await readApiToken(await headers());
 
   let defaults: { senderName?: string; senderAddress?: string } = {};
 
