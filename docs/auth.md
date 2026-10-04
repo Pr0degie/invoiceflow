@@ -61,10 +61,25 @@ the API directly (`apiClient` + `bearerHeader()`), sourcing the token from
 
 ## Token refresh
 
-Runs **server-side** inside NextAuth's `jwt()` callback — the client never handles refresh directly.
+Runs **server-side** — the client never handles refresh directly. invoice-api
+refresh tokens are single-use, so a refresh may only happen where the rotated
+JWT can be written back into the session cookie. Three places can:
+
+| Where | Trigger | Persists via |
+|---|---|---|
+| `src/proxy.ts` | page navigation to `/app/*` or `/auth/*` | `sessionCookie()` on the response (and on the request, so the render sees it) |
+| auth proxy `/api/backend/*` | browser API call | `sessionCookie()` on the response |
+| NextAuth `jwt()` callback | `useSession()` → `/api/auth/session` | Auth.js itself |
+
+**Server components must not refresh.** They can't set cookies: the rotation
+is lost, the next request replays the spent refresh token, and past the
+backend's 60 s grace window that counts as reuse and ends all of the user's
+sessions. So no `auth()` in server components (it runs `jwt()`) — use
+`getSessionUser()` / `readApiToken()`, which only decode the cookie the proxy
+already refreshed.
 
 ```
-useSession() / auth()
+useSession()
   → NextAuth jwt() callback
   → if expiresAt - 30s > now: return current token
   → else: refreshAccessToken(token)
@@ -93,11 +108,12 @@ invoice-api — never through the proxy itself.
 
 Three layers end a dead session instead of failing silently:
 
-1. **Server:** the `(app)` layout redirects to the (locale-aware) login when
-   `session.error` is set (only runs on navigation). `proxy.ts` bounces
-   `/auth/*` to `/app` only for a session proven live (`hasLiveSession`: no
-   recorded refresh error, access token fresh) — a cookie with a dead refresh
-   token would otherwise ping-pong between the two redirects forever.
+1. **Server:** `proxy.ts` refreshes on navigation, then redirects `/app/*` to
+   the (locale-aware) login unless the session is proven live
+   (`hasLiveSession`: no recorded refresh error, access token fresh), and
+   bounces `/auth/*` to `/app` only when it is — a cookie with a dead refresh
+   token gets the login page instead of ping-ponging between the two
+   redirects. The `(app)` layout repeats the check as a backstop.
 2. **Client, session-driven:** `SessionGuard` (mounted in `Providers`) watches
    `useSession()` and calls `signOut({ callbackUrl: "/auth/login" })` when
    `session.error === "RefreshAccessTokenError"`.
@@ -177,22 +193,24 @@ unknown, e.g. on the verify-email error state).
 
 ## Using the session
 
-**Server component / server action** (identity only — no token on the session):
+**Server component** (identity only — never `auth()`, see "Token refresh"):
 ```ts
-import { auth } from "@/lib/auth";
-const session = await auth();
-session?.user.id;
+import { getSessionUser } from "@/lib/auth/server-session";
+const user = await getSessionUser(); // { name, email } | null
 ```
 
-**Server-side API calls** (RSC / route handlers — token from the server-only JWT):
+**Server component API calls** (token from the server-only JWT, no refresh):
 ```ts
 import { headers } from "next/headers";
-import { getApiToken } from "@/lib/auth/api-token";
+import { readApiToken } from "@/lib/auth/api-token";
 import { apiClient, bearerHeader } from "@/lib/api/client";
 
-const token = (await getApiToken(await headers()))?.accessToken;
+const token = await readApiToken(await headers());
 apiClient.GET("/api/auth/me", { headers: bearerHeader(token) });
 ```
+
+**Route handlers** use `getApiToken()` instead, which refreshes — and must
+then write `refreshedJwt` back with `sessionCookie()`, as the auth proxy does.
 
 **Client component / hook** — no tokens, no auth headers. Just call the API;
 `apiClient`'s client-side baseUrl is `/api/backend`, the proxy does the rest:
@@ -214,7 +232,10 @@ unconditionally, but it is server-side-only by convention now.
 |---|---|
 | `src/lib/auth.ts` | NextAuth config — Credentials provider, jwt/session callbacks |
 | `src/lib/auth/refresh.ts` | `refreshAccessToken()` — called from jwt() callback and the auth proxy |
-| `src/lib/auth/api-token.ts` | `getApiToken()` — server-only access to the invoice-api token (decode JWT cookie + refresh) |
+| `src/lib/auth/api-token.ts` | Server-only access to the invoice-api token: `readApiToken()` (server components, no refresh), `getApiToken()` (route handlers, refreshes), `refreshSession()`, `sessionCookie()` |
+| `src/lib/auth/server-session.ts` | `getSessionUser()` — the signed-in user for server components |
+| `src/lib/auth/session-state.ts` | Pure session predicates shared by proxy, jwt() and the helpers above |
+| `src/proxy.ts` | Route gate; refreshes an expired access token on navigation and persists the rotated cookie |
 | `src/app/api/backend/[...path]/route.ts` | Auth proxy — injects the Bearer header for all browser API calls |
 | `src/lib/api/client.ts` | `apiClient` + `bearerHeader()` (bearer: server-side only) |
 | `src/types/next-auth.d.ts` | Type extensions: `session.error`, JWT fields (`accessToken` is JWT-only) |

@@ -29,3 +29,20 @@ export function hasLiveSession(
 ): boolean {
   return !!token && !token.error && isAccessTokenFresh(token.accessTokenExpires, now);
 }
+
+/**
+ * Whether the routing proxy should exchange the refresh token before the
+ * request renders. Server components can't write the rotated cookie, so the
+ * proxy is the only place a navigation may refresh (see docs/auth.md). A
+ * cookie that already recorded a failed refresh is left to the sign-out path.
+ */
+export function shouldRefreshSession(
+  token: { accessTokenExpires?: string; refreshToken?: string; error?: string } | null,
+  now = Date.now()
+): boolean {
+  return (
+    !!token?.refreshToken &&
+    !token.error &&
+    !isAccessTokenFresh(token.accessTokenExpires, now)
+  );
+}
