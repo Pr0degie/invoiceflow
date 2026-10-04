@@ -216,7 +216,7 @@
     },
     "verifyEmailPage": {
       "title": "E-Mail bestätigen",
-      "subtitle": "Ihre E-Mail-Adresse wird bestätigt",
+      "subtitle": "Aktivierung Ihres Kontos",
       "verifying": "E-Mail wird bestätigt…",
       "successTitle": "E-Mail bestätigt",
       "successBody": "Ihr Konto ist jetzt aktiv. Sie können sich anmelden.",

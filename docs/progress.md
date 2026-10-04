@@ -4,6 +4,55 @@ Newest first. One entry per prompt/work package.
 
 ---
 
+## 2026-10-04 — Deploy-readiness code fixes + 18b screenshots (both repos)
+
+**Refresh only where the cookie can be written.** Server components refreshed
+an expired access token (`auth()` in the `(app)` layout and the dashboard page,
+`getApiToken` in `/app/invoices/new`) but can't set cookies: the rotated
+refresh token was lost, one `/app` render spent the old one twice, and any
+request after the backend's 60 s grace replayed it — reuse detection then ended
+all of the user's sessions. `proxy.ts` now refreshes before the render and
+puts the rotated cookie on request and response; server components only decode
+it (`getSessionUser`, `readApiToken`). `/app` is gated on a live session in the
+proxy, and `/auth/*` resumes a refreshable session instead of showing the
+login. E2E against the standalone server with forged cookies and a logging
+proxy in front of the API: one refresh per navigation, none on the next one,
+dead refresh token → login without a loop. See `docs/auth.md` "Token refresh".
+
+**Invoice form limits.** The zod schema mirrors the API's request limits
+(lengths, 1–200 line items, quantity and unit price ranges) — previously a
+bare 400 with no field to attach it to.
+
+**Demo account.** invoice-api answers `403 demo_account_readonly` for password
+change and account deletion; the settings page says why.
+
+**invoice-api** (details in its `progress.md`): unique index against double
+stornos (409 for the loser of the race), startup migration waits for the
+database, e-mail addresses masked in logs.
+
+**Small things.** `poweredByHeader: false`; Auth.js `pages.error` pointed at
+the nonexistent `/auth/error` → now `/auth/login`; CI runs weekly and builds
+the Docker image.
+
+**18b screenshots (owed since 2026-07-05).** Forgot password, check e-mail,
+verify e-mail and reset password in every state, 1440 + 375, light + dark,
+de + en; no console errors, no horizontal overflow. Three fixes came out of
+the review: the verify page's subtitle said "is being verified" above the
+success and failure states (now "Account activation"); the resend form on the
+failed-verification card was narrower than the card; the "sent" state of
+forgot-password had its own link style.
+
+**Verification.** `tsc`, lint, 25 unit tests, `npm run build`, Docker image
+build; invoice-api 263 tests.
+
+**Still open (need a decision):** the four deploy blockers from 2026-09-28
+(backups, legal pages, SMTP, system of record), no reset of the demo data,
+register 409 reveals registered addresses, CORS preview-origin suffix match,
+XRechnung always writes EUR, validation messages in the invoice form are
+English-only.
+
+---
+
 ## 2026-09-28 — Deploy-readiness audit + first fixes (both repos)
 
 **Audit.** Security/robustness review of both repos before the first Coolify
@@ -198,7 +247,7 @@ forgot/resend proxy return generic `200`; an out-of-allowlist `locale:"fr"` is
 accepted (`200`) and normalized to `de` by the backend. `tsc`, `lint`, `build`
 green.
 
-**Still owed on 18b (unchanged):** Playwright screenshots (§5) — MCP absent.
+**Still owed on 18b (unchanged):** Playwright screenshots (§5) — MCP absent. (Done 2026-10-04.)
 
 ---
 

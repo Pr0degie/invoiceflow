@@ -70,7 +70,9 @@ export function VerifyEmailClient() {
         <h2 className="text-base font-semibold">{t("errorTitle")}</h2>
         <p className="text-sm text-muted-foreground">{t("errorBody")}</p>
       </div>
-      <ResendVerification />
+      <div className="w-full">
+        <ResendVerification />
+      </div>
       <p className="text-sm text-muted-foreground">
         <Link
           href="/auth/login"
