@@ -12,27 +12,40 @@ export type Currency = (typeof CURRENCIES)[number];
 export const LINE_ITEM_DISPLAY_MODES = ["AsEntered", "FlatRate"] as const;
 export type LineItemDisplayMode = (typeof LINE_ITEM_DISPLAY_MODES)[number];
 
+// Upper limits mirror invoice-api's request validation (docs/api-contract.md,
+// "Request limits"). Beyond them the API answers a 400 the form can't attach
+// to a field, so they are caught here first.
+const text = (max: number) => z.string().max(max, `Max. ${max} characters`);
+const required = (max: number) => text(max).min(1, "Required");
+
 export const lineItemSchema = z.object({
-  description: z.string().min(1, "Required"),
-  quantity: z.coerce.number().positive("Must be > 0"),
-  unitPrice: z.coerce.number().min(0, "Must be ≥ 0"),
+  description: required(2000),
+  quantity: z.coerce
+    .number()
+    .positive("Must be > 0")
+    .min(0.001, "Must be ≥ 0.001")
+    .max(1_000_000, "Must be ≤ 1,000,000"),
+  unitPrice: z.coerce
+    .number()
+    .min(0, "Must be ≥ 0")
+    .max(10_000_000, "Must be ≤ 10,000,000"),
   unit: z.enum(LINE_ITEM_UNITS),
   displayMode: z.enum(LINE_ITEM_DISPLAY_MODES),
 });
 
 export const invoiceFormSchema = z
   .object({
-    senderName: z.string().min(1, "Required"),
-    senderAddress: z.string().min(1, "Required"),
-    recipientName: z.string().min(1, "Required"),
+    senderName: required(200),
+    senderAddress: required(500),
+    recipientName: required(200),
     // Structured recipient (buyer) data — required for the E-Rechnung (XRechnung).
-    recipientStreet: z.string().min(1, "Required"),
-    recipientPostalCode: z.string().min(1, "Required"),
-    recipientCity: z.string().min(1, "Required"),
-    recipientCountryCode: z.string().min(1, "Required"),
-    recipientEmail: z.string().min(1, "Required").email("Invalid email"),
-    recipientVatId: z.string().optional(),
-    buyerReference: z.string().optional(),
+    recipientStreet: required(200),
+    recipientPostalCode: required(20),
+    recipientCity: required(100),
+    recipientCountryCode: required(2),
+    recipientEmail: required(256).email("Invalid email"),
+    recipientVatId: text(20).optional(),
+    buyerReference: text(50).optional(),
     issueDate: z.string().min(1, "Required"),
     dueDate: z.string().min(1, "Required"),
     // Leistungsdatum (single date) or Leistungszeitraum (period) — § 14 Abs. 4
@@ -43,8 +56,11 @@ export const invoiceFormSchema = z
     servicePeriodEnd: z.string(),
     currency: z.enum(CURRENCIES),
     taxRate: z.coerce.number().min(0).max(1),
-    notes: z.string().optional(),
-    lineItems: z.array(lineItemSchema).min(1, "Add at least one line item"),
+    notes: text(4000).optional(),
+    lineItems: z
+      .array(lineItemSchema)
+      .min(1, "Add at least one line item")
+      .max(200, "Max. 200 line items"),
   })
   .superRefine((values, ctx) => {
     if (values.serviceMode === "date") {
